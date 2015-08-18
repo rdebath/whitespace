@@ -34,7 +34,7 @@ wslbl	[\t ]*\n
 
 "  "{wsnum}		printf("ws_push(%d);\t/* %s */\n", cv_number(yytext+2), cv_chr(yytext));
 
-" \t\n"{wsnum}		printf("ws_leave(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
+" \t\n"{wsnum}		printf("ws_slide(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
 " \t "{wsnum}		printf("ws_pick(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
 
 "\t\n  "		printf("ws_outc();\t/* %s */\n", cv_chr(yytext));
@@ -74,7 +74,6 @@ wslbl	[\t ]*\n
     Make pretty labels.
     Add fallbacks for labels that are not defined.
     Options to include debug information.
-    Option to trap stack errors.
     Option to expand memory on read (or read zeros)
 
  */
@@ -142,13 +141,61 @@ int cv_number(char * ws_num)
 char * cv_label(char * ws_label)
 {
     char * s;
+    int l = -1;
+    static char * sbuf = 0;
+    static int maxlen = 0;
+
     for (s = ws_label; *s; s++) switch(*s)
     {
 	case ' ': *s = '0'; break;
 	case '\t': *s = '1'; break;
-	case '\n': *s = '\0'; break;
+	case '\n': *s = '\0'; l = s-ws_label; break;
 	default: *s = '*'; break;
     }
+    if (l<0) return ws_label;	/* !? */
+    if (l == 0) return "0x0";	/* An empty string is dubious. */
+
+    if (l > maxlen) {
+	if(sbuf) free(sbuf);
+	sbuf = malloc(l+8);
+	maxlen = l;
+    }
+
+    if (ws_label[0] == '0' && l%8 == 0 && l > 8) {
+	int i = 0, j = 0, n = 0;
+	for(s=ws_label; *s; s++) {
+	    i *= 2;
+	    if (*s == '1')
+		i ++;
+	    if (++j == 8) {
+		if (i>=48 && i<=57 && n != 0) {
+		    sbuf[n++] = i;
+		} else if ( (i>=65 && i<=90) || (i>=97 && i<=122) || i==95) {
+		    sbuf[n++] = i;
+		} else {
+		    n = 0;
+		    break;
+		}
+		i = j = 0;
+	    }
+	}
+	if (n) {
+	    sbuf[n] = 0;
+	    return sbuf;
+	}
+    }
+
+    if (ws_label[0] == '1' && l < 31) {
+	int i = 0;
+	for(s=ws_label; *s; s++) {
+	    i *=2;
+	    if (*s == '1')
+		i ++;
+	}
+	sprintf(sbuf, "%d", i);
+	return sbuf;
+    }
+
     return ws_label;
 }
 
@@ -164,6 +211,7 @@ char * cv_chr(char * ws_code)
 	sbuf = malloc(i+2);
 	maxlen = i;
     }
+
     for (i=0; ws_code[i]; i++) switch(ws_code[i])
     {
 	case ' ': sbuf[i] = 's'; break;
@@ -176,6 +224,7 @@ char * cv_chr(char * ws_code)
 }
 
 char * header =
+
 	"#include <stdio.h>"
 "\n"	"#include <stdlib.h>"
 "\n"	"#include <unistd.h>"
@@ -209,7 +258,7 @@ char * header =
 "\n"	"#define ws_ret()\tcontinue"
 "\n"	"#define ws_exit()\texit(0)"
 "\n"
-"\n"	"cell_t * main_stack = 0, tos = 0, nos = 0;"
+"\n"	"cell_t * main_stack = 0;"
 "\n"	"int main_slen = 0, main_sp = 0;"
 "\n"
 "\n"	"int * retr_stack = 0;"
@@ -264,8 +313,16 @@ char * header =
 "\n"	"}"
 "\n"
 "\n"	"LOCALLIB int rpop() {"
-"\n"	"    if(retr_sp == 0) return 0;"
+"\n"	"    if(retr_sp == 0) {"
+"\n"	"\tfprintf(stderr, \"Return stack underflow\\n\");"
+"\n"	"\texit(99);"
+"\n"	"    }"
 "\n"	"    return retr_stack[--retr_sp];"
+"\n"	"}"
+"\n"
+"\n"	"static void mstackempty(void) {"
+"\n"	"    fprintf(stderr, \"Main stack underflow\\n\");"
+"\n"	"    exit(99);"
 "\n"	"}"
 "\n"
 "\n"	"static void mextend(void) {"
@@ -276,68 +333,89 @@ char * header =
 "\n"	"    }"
 "\n"	"}"
 "\n"
-"\n"	"LOCALLIB void mpush(cell_t val) {"
+"\n"	"# ifdef NO_STACKCHECK"
+"\n"	"#  define mstacktwo()"
+"\n"	"#  define mstackone()"
+"\n"	"# else"
+"\n"	"LOCALLIB void mstacktwo() { if (main_sp < 2) mstackempty(); }"
+"\n"	"LOCALLIB void mstackone() { if (main_sp < 1) mstackempty(); }"
+"\n"	"# endif"
+"\n"
+"\n"	"#define TOS (main_stack[main_sp-1])"
+"\n"	"#define NOS (main_stack[main_sp-2])"
+"\n"
+"\n"	"LOCALLIB void ws_push(cell_t val) {"
 "\n"	"    if (main_sp >= main_slen) mextend();"
 "\n"	"    main_stack[main_sp++] = val;"
 "\n"	"}"
 "\n"
-"\n"	"LOCALLIB cell_t mpop() {"
-"\n"	"    if(main_sp == 0) return 0;"
+"\n"	"LOCALLIB cell_t ws_pop() {"
+"\n"	"    mstackone();"
 "\n"	"    return main_stack[--main_sp];"
 "\n"	"}"
 "\n"
-"\n"	"LOCALLIB void ws_push(cell_t val) { mpush(nos); nos = tos; tos = val; }"
-"\n"	"LOCALLIB void ws_drop() { tos = nos; nos = mpop(); }"
-"\n"	"LOCALLIB cell_t ws_pop() { cell_t val = tos; ws_drop(); return val; }"
-"\n"	"LOCALLIB void ws_dup() { mpush(nos); nos = tos; }"
-"\n"	"LOCALLIB void ws_swap() { cell_t t = tos; tos = nos; nos = t; }"
-"\n"	"LOCALLIB void ws_add() { tos = nos + tos; nos = mpop(); }"
-"\n"	"LOCALLIB void ws_sub() { tos = nos - tos; nos = mpop(); }"
-"\n"	"LOCALLIB void ws_mul() { tos = nos * tos; nos = mpop(); }"
-"\n"	"LOCALLIB void ws_div() { if (tos) tos = nos / tos; nos = mpop(); }"
-"\n"	"LOCALLIB void ws_mod() { if (tos) tos = nos % tos; nos = mpop(); }"
+"\n"	"LOCALLIB void ws_drop() { ws_pop(); }"
+"\n"	"LOCALLIB void ws_dup() { mstackone(); ws_push(TOS); }"
+"\n"	"LOCALLIB void ws_swap() { cell_t t; mstacktwo(); t = TOS; TOS = NOS; NOS = t; }"
+"\n"	"LOCALLIB void ws_add() { mstacktwo(); NOS = NOS + TOS; main_sp--; }"
+"\n"	"LOCALLIB void ws_sub() { mstacktwo(); NOS = NOS - TOS; main_sp--; }"
+"\n"	"LOCALLIB void ws_mul() { mstacktwo(); NOS = NOS * TOS; main_sp--; }"
+"\n"	"LOCALLIB void ws_div() { mstacktwo(); if (TOS) NOS = NOS / TOS; else NOS=0; main_sp--; }"
+"\n"	"LOCALLIB void ws_mod() { mstacktwo(); if (TOS) NOS = NOS % TOS; else NOS=0; main_sp--; }"
 "\n"
 "\n"	"LOCALLIB void ws_store() {"
-"\n"	"    extend_memory(nos);"
-"\n"	"    memory[nos] = tos;"
-"\n"	"    ws_drop(); ws_drop();"
+"\n"	"    mstacktwo();"
+"\n"	"    extend_memory(NOS);"
+"\n"	"    memory[NOS] = TOS;"
+"\n"	"    main_sp -= 2;"
 "\n"	"}"
 "\n"
-"\n"	"LOCALLIB void ws_fetch() { check_memory(tos); tos = memory[tos]; }"
+"\n"	"LOCALLIB void ws_fetch() {"
+"\n"	"    mstackone();"
+"\n"	"# ifdef NO_MEMORYCHECK"
+"\n"	"    if (TOS < 0 || TOS >= memlen) { TOS = 0; return; }"
+"\n"	"# else"
+"\n"	"    check_memory(TOS);"
+"\n"	"# endif"
+"\n"	"    TOS = memory[TOS];"
+"\n"	"}"
 "\n"
-"\n"	"LOCALLIB void ws_outc() { putchar(tos); ws_drop(); }"
+"\n"	"LOCALLIB void ws_outc() { mstackone(); putchar(TOS); main_sp--; }"
 "\n"
 "\n"	"LOCALLIB void ws_readc() {"
-"\n"	"    extend_memory(tos);"
-"\n"	"    memory[tos] = getchar();"
-"\n"	"    ws_drop();"
+"\n"	"    mstackone();"
+"\n"	"    extend_memory(TOS);"
+"\n"	"    memory[TOS] = getchar();"
+"\n"	"    main_sp--;"
 "\n"	"}"
 "\n"
-"\n"	"static GCC_UNUSED void ws_outn() { printf(\"%\"PRIdcell, tos); ws_drop(); }"
+"\n"	"static GCC_UNUSED void ws_outn() { mstackone(); printf(\"%\"PRIdcell, TOS); main_sp--; }"
 "\n"
 "\n"	"static GCC_UNUSED void ws_readn() {"
 "\n"	"    char ibuf[1024];"
-"\n"	"    extend_memory(tos);"
+"\n"	"    mstackone();"
+"\n"	"    extend_memory(TOS);"
 "\n"	"    if (fgets(ibuf, sizeof(ibuf), stdin)) {"
 "\n"	"\tcell_t val = 0;"
 "\n"	"\tsscanf(ibuf, \"%\"SCNdcell, &val);"
-"\n"	"\tmemory[tos] = val;"
+"\n"	"\tmemory[TOS] = val;"
 "\n"	"    } else"
-"\n"	"\tmemory[tos] = 0;"
-"\n"	"    ws_drop();"
+"\n"	"\tmemory[TOS] = 0;"
+"\n"	"    main_sp--;"
 "\n"	"}"
 "\n"
 "\n"	"static GCC_UNUSED void ws_pick(cell_t val) {"
-"\n"	"    ws_dup();"
-"\n"	"    if(val <= 0) return;"
-"\n"	"    if(val >= main_sp) return;"
-"\n"	"    tos = main_stack[main_sp-val];"
+"\n"	"    if(val < 0 || val >= main_sp) mstackempty();"
+"\n"	"    ws_push(main_stack[main_sp-val-1]);"
 "\n"	"}"
 "\n"
-"\n"	"static GCC_UNUSED void ws_leave(cell_t val) {"
-"\n"	"    cell_t t = tos;"
+"\n"	"static GCC_UNUSED void ws_slide(cell_t val) {"
+"\n"	"    cell_t t;"
+"\n"	"    mstackone();"
+"\n"	"    t = TOS;"
 "\n"	"    while(val-->0 && main_sp) ws_drop();"
-"\n"	"    tos = t;"
+"\n"	"    mstackone();"
+"\n"	"    TOS = t;"
 "\n"	"}"
 "\n"
 "\n"	"int"
