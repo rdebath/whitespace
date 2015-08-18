@@ -1,5 +1,7 @@
 
 #include <stdio.h>
+#include <string.h>
+#include <malloc.h>
 
 static void putnum(unsigned long num);
 static void putsnum(long val);
@@ -11,7 +13,9 @@ static void ws_jz(int v) { printf("\n\t "); putnum(v); }
 static void ws_call(int v) { printf("\n \t"); putnum(v); }
 
 static void ws_dup() { printf(" \n "); }
+static void ws_swap() { printf(" \n\t"); }
 static void ws_exit() { printf("\n\n\n"); }
+
 static void ws_outc() { printf("\t\n  "); }
 static void ws_readc() { printf("\t\n\t "); }
 
@@ -21,6 +25,8 @@ static void ws_sub() { printf("\t  \t"); }
 
 static void ws_drop() { printf(" \n\n"); }
 static void ws_fetch() { printf("\t\t\t"); }
+static void ws_store() { printf("\t\t "); }
+
 static void ws_outn() { printf("\t\n \t"); }
 #define ws_retrieve ws_fetch
 
@@ -66,3 +72,34 @@ putsnum(long val)
     }
 }
 
+static void ws_pushs(char * s)
+{
+    int c=0, i = strlen(s) +1;
+    for(; i>0 ; i--) {
+	if (c!=0 && c == s[i-1])
+	    ws_dup();
+	else
+	    ws_push(c = s[i-1]);
+    }
+}
+
+/*
+ * This is VERY slow, if you have more than a few dozen symbols RELACE THIS.
+ */
+static int atom(char * s)
+{
+    static char ** stringlist;
+    static int maxcount = 0;
+    static int curcount = 0;
+    int i;
+
+    if (curcount >= maxcount) {
+	stringlist = realloc(stringlist, (maxcount+=1024)*sizeof*stringlist);
+    }
+    for(i=0; i<curcount; i++) {
+	if (strcmp(s, stringlist[i]) == 0)
+	    return i+1;
+    }
+    stringlist[curcount++] = s;
+    return curcount;
+}
