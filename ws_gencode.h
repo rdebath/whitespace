@@ -3,14 +3,19 @@
 #include <string.h>
 #include <malloc.h>
 
-static void putnum(unsigned long num);
+#ifndef BIJECTIVE
+#define BIJECTIVE 0
+#endif
+
+static void putnum(unsigned long num, int clipped);
 static void putsnum(long val);
 
 static void ws_push(int v) { printf("  "); putsnum(v); }
-static void ws_label(int v) { printf("\n  "); putnum(v); }
-static void ws_jump(int v) { printf("\n \n"); putnum(v); }
-static void ws_jz(int v) { printf("\n\t "); putnum(v); }
-static void ws_call(int v) { printf("\n \t"); putnum(v); }
+static void ws_label(int v) { printf("\n  "); putnum(v, BIJECTIVE); }
+static void ws_jump(int v) { printf("\n \n"); putnum(v, BIJECTIVE); }
+static void ws_jz(int v) { printf("\n\t "); putnum(v, BIJECTIVE); }
+static void ws_jn(int v) { printf("\n\t\t"); putnum(v, BIJECTIVE); }
+static void ws_call(int v) { printf("\n \t"); putnum(v, BIJECTIVE); }
 
 static void ws_dup() { printf(" \n "); }
 static void ws_swap() { printf(" \n\t"); }
@@ -34,7 +39,7 @@ static void ws_return() { printf("\n\t\n"); }
 
 
 static void
-putnum(unsigned long num)
+putnum(unsigned long num, int clipped)
 {
     unsigned long v, max;
 
@@ -47,7 +52,8 @@ putnum(unsigned long num)
 #ifdef SEMIBUG
     putchar('#');
 #endif
-    for(;;) {
+    if (clipped) { num -= max; max /= 2; }
+    if (max) for(;;) {
 	v = num / max;
 	num = num % max;
 	if (v == 0) putchar(' '); else printf("\t");
@@ -65,10 +71,10 @@ putsnum(long val)
 #endif
     if (val >= 0) {
 	putchar(' ');
-	putnum(val);
+	putnum(val, 0);
     } else {
 	printf("\t");
-	putnum(-val);
+	putnum(-val, 0);
     }
 }
 
