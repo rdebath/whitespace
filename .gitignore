@@ -1,0 +1,10 @@
+
+# Ignore everything
+*
+# Except the source.
+!.gitignore
+!Makefile
+!*.l
+!*.awk
+!mkt
+!wsc

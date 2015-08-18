@@ -1,0 +1,11 @@
+
+(
+echo '#if 0&&QUOTES'
+# echo
+sed -n '1,/#define ws_trailer/p' /tmp/_wsc.c
+echo '#endif'
+) |
+../../bf2any/blockquote - |
+cat ; exit
+
+sed -e 's/^".../print/' -e 's/^print$/print\t""/'
