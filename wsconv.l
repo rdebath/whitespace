@@ -71,10 +71,8 @@ wslbl	[\t ]*\n
 %%
 
 /* TODO:
-    Make pretty labels.
     Add fallbacks for labels that are not defined.
     Options to include debug information.
-    Option to expand memory on read (or read zeros)
 
  */
 char * header;
