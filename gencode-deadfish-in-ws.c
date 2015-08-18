@@ -1,27 +1,5 @@
 
-#include <stdio.h>
-
-static void putnum(unsigned long num);
-static void putsnum(long val);
-
-static void ws_push(int v) { printf("  "); putsnum(v); }
-static void ws_label(int v) { printf("\n  "); putnum(v); }
-static void ws_jump(int v) { printf("\n \n"); putnum(v); }
-static void ws_jz(int v) { printf("\n\t "); putnum(v); }
-
-ws_dup() { printf(" \n "); }
-ws_exit() { printf("\n\n\n"); }
-ws_outc() { printf("\t\n  "); }
-ws_readc() { printf("\t\n\t "); }
-
-ws_add() { printf("\t   "); }
-ws_mul() { printf("\t  \n"); }
-ws_sub() { printf("\t  \t"); }
-
-ws_drop() { printf(" \n\n"); }
-ws_fetch() { printf("\t\t\t"); }
-ws_outn() { printf("\t\n \t"); }
-#define ws_retrieve ws_fetch
+#include "ws_gencode.h"
 
 int
 main(void)
@@ -112,47 +90,3 @@ main(void)
 
     exit(0);
 }
-
-
-
-
-
-static void
-putnum(unsigned long num)
-{
-    unsigned long v, max;
-
-    max = 1; v = num;
-    for(;;) {
-	v /= 2;
-	if (v == 0) break;
-	max *= 2;
-    }
-#ifdef SEMIBUG
-    putchar('#');
-#endif
-    for(;;) {
-	v = num / max;
-	num = num % max;
-	if (v == 0) putchar(' '); else printf("\t");
-	if (max == 1) break;
-	max /= 2;
-    }
-    putchar('\n');
-}
-
-static void
-putsnum(long val)
-{
-#ifdef SEMIBUG
-    putchar('?');
-#endif
-    if (val >= 0) {
-	putchar(' ');
-	putnum(val);
-    } else {
-	printf("\t");
-	putnum(-val);
-    }
-}
-
