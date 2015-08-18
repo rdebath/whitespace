@@ -8,3 +8,5 @@
 !*.awk
 !mkt
 !wsc
+!*.txt
+!*.c
