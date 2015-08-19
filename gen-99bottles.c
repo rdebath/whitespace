@@ -4,13 +4,12 @@
 #define ws_ret ws_return
 
 main() {
-/*
+
 ws_comment( "Whitespace version of 99 bottles of beer (Bottles.ws) 2003-04-01"
 "\n"	    "See http://compsoc.dur.ac.uk/whitespace/ for details interpreter"
 "\n"	    "Example by Andrew Kemp <ajwk@pell.uklinux.net>"
 "\n"	    ""
 "\n"	    "(*All* space/tab/linefeed characters are significant!)");
-*/
 
 ws_push(99);	/* sssttsssttl */
 

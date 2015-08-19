@@ -213,3 +213,28 @@ print_atom_list()
 	printf("Label %d = \"%s\"\n", i+1, atom_list[i]);
     }
 }
+
+static void
+ws_comment(char * msg)
+{
+    int nl = 0;
+    int col = 0;
+    char * s;
+
+    for (s = msg; *s; s++) {
+	if (col == 0) {
+	    printf("   \t");
+	    col ++;
+	}
+	if ( (*s >= ' ' && *s <= '~') || *s == '\t')
+	    putchar(*s);
+	else if (*s == '\n') {
+	    putchar(*s);
+	    col = 0;
+	    nl ++;
+	}
+    }
+    if (col) { putchar('\n'); nl++; }
+    while(nl-->1) ws_add();
+    ws_drop();
+}

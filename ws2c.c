@@ -33,11 +33,12 @@ int yytext_size = 0, yytext_len;
 char * yylabel;
 int yylabel_size = 0, yylabel_len;
 
-
 /* TODO:
     Add fallbacks for labels that are not defined.
  */
 char * header;
+
+int opt_v2 = 0;
 
 int main(int argc, char ** argv)
 {
@@ -97,7 +98,9 @@ process_command()
 	    if (yytext[2] == '\t') printf("ws_swap();");
 	}
 	if (yytext[1] == '\t') {
-	    if (yytext[2] != '\t') {
+	    if (opt_v2)
+		broken_command();
+	    else if (yytext[2] != '\t') {
 		append_label();
 		if (yytext[2] == ' ') printf("ws_pick(%"PRIdcell");", cv_number(yytext+3));
 		if (yytext[2] == '\n') printf("ws_slide(%"PRIdcell");", cv_number(yytext+3));
@@ -125,7 +128,7 @@ process_command()
 		if (yytext[2] == ' ') printf("ws_jz(%s);", cv_label(yytext+3));
 		if (yytext[2] == '\t') printf("ws_jn(%s);", cv_label(yytext+3));
 	    } else
-		printf("ws_ret();");
+		printf("ws_return();");
 	}
     }
 
@@ -177,7 +180,8 @@ process_command()
 void broken_command()
 {
     char * s = cv_chr(yytext);
-    printf("if (ws_%s) ws_%s();", s, s);
+    fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
+    printf("// if (ws_%s) ws_%s();", s, s);
 }
 
 void
@@ -364,7 +368,7 @@ char * header =
 "\n"	"#define ws_jump(x)\tgoto L_ ## x"
 "\n"	"#define ws_jz(x)\tif(ws_pop() == 0) goto L_ ## x"
 "\n"	"#define ws_jn(x)\tif(ws_pop() < 0) goto L_ ## x"
-"\n"	"#define ws_ret()\tcontinue"
+"\n"	"#define ws_return()\tcontinue"
 "\n"	"#define ws_exit()\texit(0)"
 "\n"
 "\n"	"cell_t * main_stack = 0;"
