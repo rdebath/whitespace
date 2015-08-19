@@ -7,7 +7,7 @@
 !*.l
 !*.awk
 !mkt
-!wsc
+!*.sh
 !*.txt
 !*.c
 !*.h
