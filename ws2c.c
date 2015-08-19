@@ -9,7 +9,7 @@ char * cv_chr(char *);
 
 void append_label(void);
 void append_char(void);
-int process_command(void);
+void process_command(void);
 
 FILE * yyin;
 
@@ -54,7 +54,8 @@ int main(int argc, char ** argv)
     return 0;
 }
 
-int process_command()
+void
+process_command()
 {
     yytext_len = yylabel_len = 0;
     append_char();
@@ -290,7 +291,6 @@ char * cv_label(char * ws_label)
 
 char * cv_chr(char * ws_code)
 {
-    char * s;
     int i;
     static char * sbuf = 0;
     static int maxlen = 0;
