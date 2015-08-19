@@ -30,7 +30,7 @@ ws_store();
 
 
 ws_push(3); ws_fetch();
-ws_jnz(memcopy_end);//no more left
+ws_jzn(memcopy_end);//no more left
 
 ws_push(1); ws_fetch();
 ws_push(2); ws_fetch();

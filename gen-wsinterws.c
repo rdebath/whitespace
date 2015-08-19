@@ -1,9 +1,5 @@
-
 #define ATOMISE_LABELS
-#define xVERBOSE
-
 #include "ws_gencode.h"
-
 int main() {
 /*
 options
@@ -12,14 +8,8 @@ print_trace      print each instruction when it is run
 
 */
 
-#undef ws_jnz
-#define ws_jnz ws_jzn
-#define ws_jpz ws_jzp
-
 ws_call(main);
 ws_exit();
-
-
 
 #include "io.h"
 #include "memory.h"
@@ -43,35 +33,35 @@ ws_exit();
 */
 
 ws_label(main);
-ws_call(run);
-ws_return();
+  ws_call(run);
+  ws_return();
 
 ws_label(run);
-ws_call(intro);
+  ws_call(intro);
 
 //pushs "beginning reading"
 //call printsln
 
 
 // read program
-ws_push(20);
-ws_push(100);
+  ws_push(20);
+  ws_push(100);
 ws_store();
 
-ws_push(20);
+  ws_push(20);
 ws_fetch();
 
 ws_call(read_program);
 
-ws_push(21);
-ws_swap();
+  ws_push(21);
+  ws_swap();
 ws_store();
 
-ws_push(22);
-ws_push(21);
-ws_fetch();
-ws_push(10);
-ws_add();
+  ws_push(22);
+      ws_push(21);
+    ws_fetch();
+    ws_push(10);
+  ws_add();
 ws_store();
 
 ws_pushs("-- WS Interpreter WS -------------------------------------------");
@@ -80,24 +70,24 @@ ws_call(printsln);
 //pushs "compiling to byte code"
 //call printsln
 
-ws_push(20);
+  ws_push(20);
 ws_fetch();
-ws_push(21);
+  ws_push(21);
 ws_fetch();
-ws_push(22);
+  ws_push(22);
 ws_fetch();
 
 ws_call(compile_byte_code);
 
-ws_push(23);
-ws_swap();
+  ws_push(23);
+  ws_swap();
 ws_store();
 
-ws_push(24);
-ws_push(23);
-ws_fetch();
-ws_push(10);
-ws_add();
+  ws_push(24);
+      ws_push(23);
+    ws_fetch();
+    ws_push(10);
+  ws_add();
 ws_store();
 
 //pushs "compiling to instruction code"
@@ -105,17 +95,17 @@ ws_store();
 
 
 
-ws_push(22);
+  ws_push(22);
 ws_fetch();
-ws_push(23);
+  ws_push(23);
 ws_fetch();
-ws_push(24);
+  ws_push(24);
 ws_fetch();
 
 ws_call(compile_instruction_code);
 
-ws_push(25);
-ws_swap();
+  ws_push(25);
+  ws_swap();
 ws_store();
 
 //pushs "compiling labels"
@@ -128,48 +118,48 @@ ws_call(compile_labels);
 //pushs "creating stack"
 //call printsln
 
-ws_push(26);
-ws_push(25);
-ws_fetch();
-ws_push(10);
-ws_add();
+  ws_push(26);
+      ws_push(25);
+    ws_fetch();
+    ws_push(10);
+  ws_add();
 ws_store();//stack start
 
-ws_push(27);
-ws_push(26);
-ws_fetch();
+  ws_push(27);
+    ws_push(26);
+  ws_fetch();
 ws_store();//stack end ;same as start
 
-ws_push(26);
-ws_fetch();
-ws_push(10);
+    ws_push(26);
+  ws_fetch();
+  ws_push(10);
 ws_call(mem_zero);
 
 //pushs "creating heap"
 //call printsln
 
-ws_push(28);
-ws_push(27);
-ws_fetch();
-ws_push(10);
-ws_add();
+  ws_push(28);
+      ws_push(27);
+    ws_fetch();
+    ws_push(10);
+  ws_add();
 ws_store();//heap start
 
-ws_push(29);
-ws_push(28);
-ws_fetch();
+  ws_push(29);
+    ws_push(28);
+  ws_fetch();
 ws_store();// heap end
 
-ws_push(28);
-ws_fetch();
-ws_push(10);
+    ws_push(28);
+  ws_fetch();
+  ws_push(10);
 ws_call(mem_zero);
 
 //pushs "starting to interpret"
 //call printsln
 
 #ifdef print_compilation
-// debug_printheap
+// debug_printheap()
 #endif
 
 ws_call(interpret);
@@ -187,18 +177,18 @@ ws_exit();
 // variables
 ws_label(compile_labels);
 
-ws_push(24);
+    ws_push(24);
 ws_fetch();
 
 ws_label(compile_labels_loop);
 
-ws_dup();
-ws_push(25);
-ws_fetch();
+  ws_dup();
+    ws_push(25);
+  ws_fetch();
 ws_sub();
-ws_jpz(compile_labels_end_pop);
+ws_jzp(compile_labels_end_pop);
 
-ws_dup();
+    ws_dup();
 ws_fetch();// got the type
 
 ws_dup(); ws_push(8); ws_sub();
@@ -223,13 +213,13 @@ ws_jump(compile_labels_loop);
 ws_label(compile_labels_is_label);
 ws_drop();
 
-ws_dup();
+    ws_dup();
 ws_push(1); ws_add();
 
-ws_dup();
+    ws_dup();
 ws_fetch();
 
-ws_call(get_label_ip);
+    ws_call(get_label_ip);
 ws_store();
 
 
@@ -257,28 +247,28 @@ ws_return();
 
 ws_label(get_label_ip);
 
-ws_push(1);
+    ws_push(1);
 ws_fetch();
 // save 1
 
 ws_swap();
 
-ws_push(1);
-ws_swap();
+        ws_push(1);
+    ws_swap();
 ws_store();
 
 
-ws_push(24);
+    ws_push(24);
 ws_fetch();
 
 ws_label(get_label_ip_loop);
-ws_dup();
-ws_push(25);
-ws_fetch();
+  ws_dup();
+    ws_push(25);
+  ws_fetch();
 ws_sub();
-ws_jpz(get_label_ip_end_pop);
+ws_jzp(get_label_ip_end_pop);
 
-ws_dup();
+    ws_dup();
 ws_fetch();// got the type
 
 ws_dup(); ws_push(7); ws_sub();
@@ -294,11 +284,11 @@ ws_jump(get_label_ip_loop);
 ws_label(get_label_ip_is_label);
 ws_drop();
 
-ws_dup();
-ws_push(1); ws_add();
-ws_fetch();
-ws_push(1);
-ws_fetch();
+            ws_dup();
+        ws_push(1); ws_add();
+  ws_fetch();
+    ws_push(1);
+  ws_fetch();
 ws_sub();
 ws_jz(get_label_ip_found_label);
 
@@ -349,41 +339,41 @@ ws_exit();
 // [1] new item
 // value
 ws_label(stack_push_back);
-ws_push(27);
-ws_push(27); ws_fetch();//old stack end
-ws_push(1); ws_add();// new stack end
-ws_store();
+    ws_push(27);
+      ws_push(27); ws_fetch();//old stack end
+    ws_push(1); ws_add();// new stack end
+  ws_store();
     // just set new and and let the memory arrange
 
-ws_call(memory_arrange);
+  ws_call(memory_arrange);
 
-ws_push(27); ws_fetch();
-ws_push(1); ws_sub();//ptr to back
-ws_swap();
-ws_store();
+                ws_push(27); ws_fetch();
+            ws_push(1); ws_sub();//ptr to back
+        ws_swap();
+    ws_store();
     // save new item
 
-ws_return();
+  ws_return();
 
 
 // parameter
 // [1] new item
 // value
 ws_label(stack_push_front);
-ws_push(26);
-ws_push(26); ws_fetch();//old stack start
-ws_push(1); ws_sub();// new stack start
-ws_store();
+    ws_push(26);
+      ws_push(26); ws_fetch();//old stack start
+    ws_push(1); ws_sub();// new stack start
+  ws_store();
     // just set new and and let the memory arrange
 
-ws_call(memory_arrange);
+  ws_call(memory_arrange);
 
-ws_push(26); ws_fetch();
-ws_swap();
-ws_store();
+      ws_push(26); ws_fetch();
+        ws_swap();
+    ws_store();
     // save new item
 
-ws_return();
+  ws_return();
 
 
 
@@ -395,119 +385,119 @@ ws_return();
 // return
 // [1] value
 ws_label(stack_pop_back);
-ws_push(26); ws_fetch();//start of stack
-ws_push(27); ws_fetch();//end of stack
-ws_sub();
-ws_jz(stack_pop_back_error_empty);
+      ws_push(26); ws_fetch();//start of stack
+      ws_push(27); ws_fetch();//end of stack
+    ws_sub();
+    ws_jz(stack_pop_back_error_empty);
 
-ws_push(27); //end of stack
-ws_fetch();
-ws_push(1);
-ws_sub();// last element
-ws_fetch();
+          ws_push(27); //end of stack
+        ws_fetch();
+        ws_push(1);
+      ws_sub();// last element
+    ws_fetch();
 
 
-ws_push(27); //end of stack
-ws_fetch();
-ws_push(1);
-ws_sub();// last element
-ws_push(0);
-ws_store();
+          ws_push(27); //end of stack
+        ws_fetch();
+        ws_push(1);
+      ws_sub();// last element
+            ws_push(0);
+        ws_store();
         // erase old element
 
-ws_push(27);
-ws_push(27); //end of stack
-ws_fetch();
-ws_push(1);
-ws_sub();
-ws_store();
+            ws_push(27);
+          ws_push(27); //end of stack
+        ws_fetch();
+        ws_push(1);
+      ws_sub();
+    ws_store();
 
-ws_call(memory_arrange);
-ws_return();
+        ws_call(memory_arrange);
+        ws_return();
 
 
-ws_label(stack_pop_back_error_empty);
-ws_pushs("error: stack_pop_back and stack empty");
-ws_call(printsln);
-ws_push(-1);
-ws_return();
+    ws_label(stack_pop_back_error_empty);
+    ws_pushs("error: stack_pop_back and stack empty");
+    ws_call(printsln);
+        ws_push(-1);
+        ws_return();
 
 // parameter
 // return
 // [1] value
 ws_label(stack_pop_front);
-ws_push(26); //start of stack
-ws_fetch();
-ws_push(27); //end of stack
-ws_fetch();
-ws_sub();
-ws_jz(stack_pop_front_error_empty);
+        ws_push(26); //start of stack
+      ws_fetch();
+        ws_push(27); //end of stack
+      ws_fetch();
+    ws_sub();
+    ws_jz(stack_pop_front_error_empty);
 
-ws_push(26); //start of stack
-ws_fetch();// first element
-ws_fetch();
+            ws_push(26); //start of stack
+          ws_fetch();// first element
+      ws_fetch();
 
-ws_push(26); //start of stack
-ws_fetch();// first element
-ws_push(0);
-ws_store();
+        ws_push(26); //start of stack
+      ws_fetch();// first element
+            ws_push(0);
+        ws_store();
         // erase old element
 
-ws_push(26);
-ws_push(26); //end of stack
-ws_fetch();
-ws_push(1);
-ws_add();
-ws_store();
+            ws_push(26);
+          ws_push(26); //end of stack
+        ws_fetch();
+        ws_push(1);
+      ws_add();
+    ws_store();
 
-ws_call(memory_arrange);
-ws_return();
+        ws_call(memory_arrange);
+        ws_return();
 
 
-ws_label(stack_pop_front_error_empty);
-ws_pushs("error: stack_pop_front and stack empty");
-ws_call(printsln);
-ws_push(-1);
-ws_return();
+    ws_label(stack_pop_front_error_empty);
+    ws_pushs("error: stack_pop_front and stack empty");
+    ws_call(printsln);
+        ws_push(-1);
+        ws_return();
 
 
 // makes sure the address is available in heap (resizing it if necessary)
 // parameter
 //  [1] address
 ws_label(heap_extend_to_address);
-ws_dup();
-ws_jn(heap_extend_to_address_done_pop);//error !! negative address
+    ws_dup();
+    ws_jn(heap_extend_to_address_done_pop);//error !! negative address
 
 //      doub
-ws_push(28); ws_fetch();//heap start
-ws_add();
-ws_push(29); ws_fetch();//heap end
-ws_sub();
-ws_push(1); ws_add();
+      ws_push(28); ws_fetch();//heap start
+    ws_add();
+      ws_push(29); ws_fetch();//heap end
+    ws_sub();
+    ws_push(1); ws_add();
     // add xxx allocate xxx byte additional for seldom realloc
-ws_dup();
-ws_jnz(heap_extend_to_address_done_pop);
+    ws_dup();
+    ws_jzn(heap_extend_to_address_done_pop);
 //    jumpn heap_extend_to_address_done_pop
 //    doub
 //    jumpz heap_extend_to_address_done_pop
 
-ws_dup();
-ws_push(29);
-ws_fetch();
-ws_swap();
-ws_call(mem_zero);//zero the new memory
+      ws_dup();
+        ws_push(29);
+      ws_fetch();
+    ws_swap();
+    ws_call(mem_zero);//zero the new memory
 
-ws_dup();
-ws_push(29);
-ws_fetch();
-ws_add();
-ws_push(29);
-ws_swap();
-ws_store();//store new memory end
+        ws_dup();
+          ws_push(29);
+        ws_fetch();
+      ws_add();
+      ws_push(29);
+        ws_swap();
+    ws_store();//store new memory end
 
-ws_label(heap_extend_to_address_done_pop);
-ws_drop();
-ws_return();
+    ws_label(heap_extend_to_address_done_pop);
+    ws_drop();
+    ws_return();
 
 
 
@@ -532,39 +522,39 @@ ws_label(heap_store);
 
 //    debug_printheap
 
-ws_swap();
-ws_dup();
-ws_jn(heap_store_negative_address);
+    ws_swap();
+    ws_dup();
+    ws_jn(heap_store_negative_address);
 
-ws_dup();
+    ws_dup();
 
 //    debug_printstack
-ws_call(heap_extend_to_address);
+    ws_call(heap_extend_to_address);
 //    debug_printstack
 //    debug_printheap
 
 //    debug_printstack
 
-ws_push(28); //heap start
-ws_fetch();
-ws_add();
+        ws_push(28); //heap start
+      ws_fetch();
+    ws_add();
 
-ws_swap();
+        ws_swap();
 
 //    debug_printstack
 
-ws_store();
+    ws_store();
 //    debug_printheap
 //    call interpreter_debug_printheap
 
-ws_return();
+    ws_return();
 
-ws_label(heap_store_negative_address);
-ws_pushs("error: heap store, negative address: ");
-ws_call(printsln);
-ws_outn();
-ws_drop();
-ws_return();
+    ws_label(heap_store_negative_address);
+    ws_pushs("error: heap store, negative address: ");
+    ws_call(printsln);
+    ws_outn();
+    ws_drop();
+    ws_return();
 
 
 // parameter
@@ -573,42 +563,42 @@ ws_return();
 //  [1] value
 ws_label(heap_retrive);
 
-ws_dup();
-ws_jn(heap_retrive_address_negative);
+    ws_dup();
+    ws_jn(heap_retrive_address_negative);
 
-ws_push(28); //heap start
-ws_fetch();
-ws_add();
+        ws_push(28); //heap start
+      ws_fetch();
+    ws_add();
 
-ws_dup();
-ws_push(29); //heap end
-ws_fetch();
-ws_swap();
-ws_sub();
-ws_jnz(heap_retrive_address_to_big);
+    ws_dup();
+        ws_push(29); //heap end
+      ws_fetch();
+      ws_swap();
+    ws_sub();
+    ws_jzn(heap_retrive_address_to_big);
 //    debug_printstack
-ws_fetch();
+    ws_fetch();
 //    debug_printstack
 
-ws_return();
+    ws_return();
 
-ws_label(heap_retrive_address_negative);
-ws_pushs("error: heap retrive: address negative: ");
-ws_call(prints);
-ws_outn();
-ws_push(0);
-ws_call(printsln);
-ws_push(0);
-ws_return();
+    ws_label(heap_retrive_address_negative);
+    ws_pushs("error: heap retrive: address negative: ");
+    ws_call(prints);
+    ws_outn();
+    ws_push(0);
+    ws_call(printsln);
+    ws_push(0);
+    ws_return();
 
-ws_label(heap_retrive_address_to_big);
-ws_pushs("error: heap retrive: address too big: ");
-ws_call(prints);
-ws_outn();
-ws_push(0);
-ws_call(printsln);
-ws_push(0);
-ws_return();
+    ws_label(heap_retrive_address_to_big);
+    ws_pushs("error: heap retrive: address too big: ");
+    ws_call(prints);
+    ws_outn();
+    ws_push(0);
+    ws_call(printsln);
+    ws_push(0);
+    ws_return();
 
 
 
@@ -631,36 +621,36 @@ ws_return();
 // [6] heap_length
 
 ws_label(memory_arrange);
-ws_push(1);
-ws_fetch();
-ws_push(2);
-ws_fetch();
-ws_push(3);
-ws_fetch();
-ws_push(4);
-ws_fetch();
-ws_push(5);
-ws_fetch();
-ws_push(6);
-ws_fetch();
+        ws_push(1);
+    ws_fetch();
+        ws_push(2);
+    ws_fetch();
+        ws_push(3);
+    ws_fetch();
+        ws_push(4);
+    ws_fetch();
+        ws_push(5);
+    ws_fetch();
+        ws_push(6);
+    ws_fetch();
     // save the vars
 
-ws_push(3);
-ws_push(27);
-ws_fetch();
-ws_push(26);
-ws_fetch();
-ws_sub();
-ws_store();
+    ws_push(3);
+                ws_push(27);
+            ws_fetch();
+                ws_push(26);
+            ws_fetch();
+        ws_sub();
+    ws_store();
     // get stack length
 
-ws_push(6);
-ws_push(29);
-ws_fetch();
-ws_push(28);
-ws_fetch();
-ws_sub();
-ws_store();
+    ws_push(6);
+                ws_push(29);
+            ws_fetch();
+                ws_push(28);
+            ws_fetch();
+        ws_sub();
+    ws_store();
     // get heap length
 
     //code_inst_end + 10 > stack_start
@@ -671,51 +661,51 @@ ws_store();
 
     // stack_end = stack_start + stack_length
 
-ws_push(26);
-ws_fetch();// stack_start
-ws_push(25);
-ws_fetch();// code_inst_end
-ws_push(10);
-ws_add();
-ws_sub();
-ws_jn(memory_arrange_set_stack_start);
+                ws_push(26);
+            ws_fetch();// stack_start
+                ws_push(25);
+            ws_fetch();// code_inst_end
+            ws_push(10);
+        ws_add();
+    ws_sub();
+    ws_jn(memory_arrange_set_stack_start);
 
-ws_push(25); // code_inst_end
-ws_fetch();
-ws_push(100);
-ws_add();
-ws_push(26); // stack start
-ws_fetch();
-ws_sub();
-ws_jn(memory_arrange_set_stack_start);
+        ws_push(25); // code_inst_end
+      ws_fetch();
+      ws_push(100);
+    ws_add();
+      ws_push(26); // stack start
+    ws_fetch();
+  ws_sub();
+    ws_jn(memory_arrange_set_stack_start);
 
-ws_jump(memory_arrange_old_stack_start);
+    ws_jump(memory_arrange_old_stack_start);
 
-ws_label(memory_arrange_old_stack_start);
-ws_push(1);
-ws_push(26);
-ws_fetch();
-ws_store();
-ws_jump(memory_arrange_calc_heap);
+    ws_label(memory_arrange_old_stack_start);
+        ws_push(1);
+            ws_push(26);
+        ws_fetch();
+    ws_store();
+    ws_jump(memory_arrange_calc_heap);
 
-ws_label(memory_arrange_set_stack_start);
-ws_push(1);
-ws_push(25);
-ws_fetch();
-ws_push(20);
-ws_add();
-ws_store();
-ws_jump(memory_arrange_calc_heap);
+    ws_label(memory_arrange_set_stack_start);
+        ws_push(1);
+        ws_push(25);
+      ws_fetch();
+      ws_push(20);
+        ws_add();
+    ws_store();
+    ws_jump(memory_arrange_calc_heap);
 
 
-ws_label(memory_arrange_calc_heap);
-ws_push(2); //end
-ws_push(1);
-ws_fetch();//start
-ws_push(3);
-ws_fetch();//length
-ws_add();
-ws_store();
+    ws_label(memory_arrange_calc_heap);
+        ws_push(2); //end
+        ws_push(1);
+      ws_fetch();//start
+        ws_push(3);
+      ws_fetch();//length
+        ws_add();
+    ws_store();
 
 
     //stack_end + 10 > heap_start
@@ -724,134 +714,134 @@ ws_store();
     //else
     //     heap_start = old heap_start
 
-ws_push(28);
-ws_fetch();// heap_start
-ws_push(27);
-ws_fetch();// stack_end
-ws_push(10);
-ws_add();
-ws_sub();
-ws_jn(memory_arrange_set_heap_start);
+                ws_push(28);
+            ws_fetch();// heap_start
+                ws_push(27);
+            ws_fetch();// stack_end
+            ws_push(10);
+        ws_add();
+    ws_sub();
+    ws_jn(memory_arrange_set_heap_start);
 
-ws_push(27); // stack_end
-ws_fetch();
-ws_push(100);
-ws_add();
-ws_push(28); // heap start
-ws_fetch();
-ws_sub();
-ws_jn(memory_arrange_set_heap_start);
+        ws_push(27); // stack_end
+      ws_fetch();
+      ws_push(100);
+    ws_add();
+      ws_push(28); // heap start
+    ws_fetch();
+  ws_sub();
+    ws_jn(memory_arrange_set_heap_start);
 
-ws_jump(memory_arrange_old_heap_start);
+    ws_jump(memory_arrange_old_heap_start);
 
-ws_label(memory_arrange_old_heap_start);
-ws_push(4);
-ws_push(28);
-ws_fetch();
-ws_store();
-ws_jump(memory_arrange_calc_heap_end);
+    ws_label(memory_arrange_old_heap_start);
+        ws_push(4);
+            ws_push(28);
+        ws_fetch();
+    ws_store();
+    ws_jump(memory_arrange_calc_heap_end);
 
-ws_label(memory_arrange_set_heap_start);
-ws_push(4);
-ws_push(27);
-ws_fetch();
-ws_push(20);
-ws_add();
-ws_store();
-ws_jump(memory_arrange_calc_heap_end);
+    ws_label(memory_arrange_set_heap_start);
+        ws_push(4);
+        ws_push(27);
+      ws_fetch();
+      ws_push(20);
+        ws_add();
+    ws_store();
+    ws_jump(memory_arrange_calc_heap_end);
 
 
-ws_label(memory_arrange_calc_heap_end);
-ws_push(5); //end
-ws_push(4);
-ws_fetch();//start
-ws_push(6);
-ws_fetch();//length
-ws_add();
-ws_store();
+    ws_label(memory_arrange_calc_heap_end);
+        ws_push(5); //end
+        ws_push(4);
+      ws_fetch();//start
+        ws_push(6);
+      ws_fetch();//length
+        ws_add();
+    ws_store();
 
 // save [1]-[3]
-ws_push(1); ws_fetch();
-ws_push(2); ws_fetch();
-ws_push(3); ws_fetch();
+    ws_push(1); ws_fetch();
+    ws_push(2); ws_fetch();
+    ws_push(3); ws_fetch();
 
     // move heap to heap_start
-ws_push(26); // stack start
-ws_fetch();//source
-ws_push(1); // new stack start
-ws_fetch();//dest
-ws_push(3);
-ws_fetch();// length
-ws_call(mem_move);
+        ws_push(26); // stack start
+    ws_fetch();//source
+        ws_push(1); // new stack start
+    ws_fetch();//dest
+        ws_push(3);
+    ws_fetch();// length
+    ws_call(mem_move);
 
 // restore [1]-[3]
-ws_push(3); ws_swap(); ws_store();
-ws_push(2); ws_swap(); ws_store();
-ws_push(1); ws_swap(); ws_store();
+    ws_push(3); ws_swap(); ws_store();
+    ws_push(2); ws_swap(); ws_store();
+    ws_push(1); ws_swap(); ws_store();
 
 
-ws_push(26);
-ws_push(1);
-ws_fetch();
-ws_store();
+    ws_push(26);
+            ws_push(1);
+        ws_fetch();
+    ws_store();
 
-ws_push(27);
-ws_push(2);
-ws_fetch();
-ws_store();
+    ws_push(27);
+            ws_push(2);
+        ws_fetch();
+    ws_store();
 
 // save [1]-[3]
-ws_push(1); ws_fetch();
-ws_push(2); ws_fetch();
-ws_push(3); ws_fetch();
+    ws_push(1); ws_fetch();
+    ws_push(2); ws_fetch();
+    ws_push(3); ws_fetch();
 
     // move stack to stack_start
-ws_push(28); // stack start
-ws_fetch();//source
-ws_push(4); // new stack start
-ws_fetch();//dest
-ws_push(6);
-ws_fetch();// length
-ws_call(mem_move);
+        ws_push(28); // stack start
+    ws_fetch();//source
+        ws_push(4); // new stack start
+    ws_fetch();//dest
+        ws_push(6);
+    ws_fetch();// length
+    ws_call(mem_move);
 
 // restore [1]-[3]
-ws_push(3); ws_swap(); ws_store();
-ws_push(2); ws_swap(); ws_store();
-ws_push(1); ws_swap(); ws_store();
+    ws_push(3); ws_swap(); ws_store();
+    ws_push(2); ws_swap(); ws_store();
+    ws_push(1); ws_swap(); ws_store();
 
-ws_push(28);
-ws_push(4);
-ws_fetch();
-ws_store();
+    ws_push(28);
+            ws_push(4);
+        ws_fetch();
+    ws_store();
 
-ws_push(29);
-ws_push(5);
-ws_fetch();
-ws_store();
-
-
+    ws_push(29);
+            ws_push(5);
+        ws_fetch();
+    ws_store();
 
 
-ws_push(6);
-ws_swap();
-ws_store();
-ws_push(5);
-ws_swap();
-ws_store();
-ws_push(4);
-ws_swap();
-ws_store();
-ws_push(3);
-ws_swap();
-ws_store();
-ws_push(2);
-ws_swap();
-ws_store();
-ws_push(1);
-ws_swap();
-ws_store();
+
+
+            ws_push(6);
+        ws_swap();
+    ws_store();
+            ws_push(5);
+        ws_swap();
+    ws_store();
+            ws_push(4);
+        ws_swap();
+    ws_store();
+            ws_push(3);
+        ws_swap();
+    ws_store();
+            ws_push(2);
+        ws_swap();
+    ws_store();
+            ws_push(1);
+        ws_swap();
+    ws_store();
     // restore the vars
-ws_return();
+    ws_return();
 
 
 
@@ -864,21 +854,21 @@ ws_return();
 // [2] inst code
 // [3] data code
 ws_label(interpret);
-ws_push(1);
-ws_push(24);
-ws_fetch();
-ws_store();
+    ws_push(1);
+      ws_push(24);
+    ws_fetch();
+  ws_store();
 
 //    debug_printheap
 
-ws_label(interpret_start);
+    ws_label(interpret_start);
 
-ws_jump(interpret_next);
+    ws_jump(interpret_next);
 
-ws_label(interpret_next_pop);
-ws_drop();
+    ws_label(interpret_next_pop);
+    ws_drop();
 
-ws_label(interpret_next);
+    ws_label(interpret_next);
 
 //    pushs " "
 //    call printsln
@@ -886,465 +876,465 @@ ws_label(interpret_next);
 //    retrive 1
 //  outn
 
-ws_push(1); ws_fetch();
-ws_jn(interpret_end);
+    ws_push(1); ws_fetch();
+  ws_jn(interpret_end);
 
-ws_push(1); ws_fetch();
-ws_push(25); ws_fetch();
-ws_sub();
-ws_jp(interpret_end);
+    ws_push(1); ws_fetch();
+    ws_push(25); ws_fetch();
+    ws_sub();
+  ws_jp(interpret_end);
 
 
-ws_push(1);
-ws_fetch();
-ws_fetch();
+          ws_push(1);
+      ws_fetch();
+    ws_fetch();
     // get inst
 
-ws_dup();
-ws_push(2);
-ws_swap();
-ws_store();
+        ws_dup();
+        ws_push(2);
+        ws_swap();
+    ws_store();
 
-ws_push(3);
-ws_push(1); ws_fetch();
-ws_push(1); ws_add();
-ws_fetch();
-ws_store();// get data
+        ws_push(3);
+          ws_push(1); ws_fetch();
+        ws_push(1); ws_add();
+      ws_fetch();
+    ws_store();// get data
 
-ws_push(1);
-ws_push(1); ws_fetch();
-ws_push(2); ws_add();
-ws_store();
+    ws_push(1);
+          ws_push(1); ws_fetch();
+        ws_push(2); ws_add();
+    ws_store();
     // next ip
 
 
 #ifdef trace_stack
-ws_call(interpreter_debug_printstack);
+        ws_call(interpreter_debug_printstack);
 #endif
 
 #ifdef trace_heap
-ws_call(interpreter_debug_printheap);
+        ws_call(interpreter_debug_printheap);
 #endif
 
-ws_dup(); ws_push(1); ws_sub();
-ws_jz(interpret_push);
+    ws_dup(); ws_push(1); ws_sub();
+    ws_jz(interpret_push);
 
-ws_dup(); ws_push(2); ws_sub();
-ws_jz(interpret_pop);
+    ws_dup(); ws_push(2); ws_sub();
+    ws_jz(interpret_pop);
 
-ws_dup(); ws_push(3); ws_sub();
-ws_jz(interpret_doub);
+    ws_dup(); ws_push(3); ws_sub();
+    ws_jz(interpret_doub);
 
-ws_dup(); ws_push(4); ws_sub();
-ws_jz(interpret_swap);
+    ws_dup(); ws_push(4); ws_sub();
+    ws_jz(interpret_swap);
 
-ws_dup(); ws_push(5); ws_sub();
-ws_jz(interpret_store);
+    ws_dup(); ws_push(5); ws_sub();
+    ws_jz(interpret_store);
 
-ws_dup(); ws_push(6); ws_sub();
-ws_jz(interpret_retrive);
+    ws_dup(); ws_push(6); ws_sub();
+    ws_jz(interpret_retrive);
 
-ws_dup(); ws_push(7); ws_sub();
-ws_jz(interpret_label);
+    ws_dup(); ws_push(7); ws_sub();
+    ws_jz(interpret_label);
 
-ws_dup(); ws_push(8); ws_sub();
-ws_jz(interpret_call);
+    ws_dup(); ws_push(8); ws_sub();
+    ws_jz(interpret_call);
 
-ws_dup(); ws_push(9); ws_sub();
-ws_jz(interpret_jump);
+    ws_dup(); ws_push(9); ws_sub();
+    ws_jz(interpret_jump);
 
-ws_dup(); ws_push(10); ws_sub();
-ws_jz(interpret_jumpz);
+    ws_dup(); ws_push(10); ws_sub();
+    ws_jz(interpret_jumpz);
 
-ws_dup(); ws_push(11); ws_sub();
-ws_jz(interpret_jumpn);
+    ws_dup(); ws_push(11); ws_sub();
+    ws_jz(interpret_jumpn);
 
-ws_dup(); ws_push(12); ws_sub();
-ws_jz(interpret_ret);
+    ws_dup(); ws_push(12); ws_sub();
+    ws_jz(interpret_ret);
 
-ws_dup(); ws_push(13); ws_sub();
-ws_jz(interpret_exit);
+    ws_dup(); ws_push(13); ws_sub();
+    ws_jz(interpret_exit);
 
-ws_dup(); ws_push(14); ws_sub();
-ws_jz(interpret_add);
+    ws_dup(); ws_push(14); ws_sub();
+    ws_jz(interpret_add);
 
-ws_dup(); ws_push(15); ws_sub();
-ws_jz(interpret_sub);
+    ws_dup(); ws_push(15); ws_sub();
+    ws_jz(interpret_sub);
 
-ws_dup(); ws_push(16); ws_sub();
-ws_jz(interpret_mul);
+    ws_dup(); ws_push(16); ws_sub();
+    ws_jz(interpret_mul);
 
-ws_dup(); ws_push(17); ws_sub();
-ws_jz(interpret_div);
+    ws_dup(); ws_push(17); ws_sub();
+    ws_jz(interpret_div);
 
-ws_dup(); ws_push(18); ws_sub();
-ws_jz(interpret_mod);
+    ws_dup(); ws_push(18); ws_sub();
+    ws_jz(interpret_mod);
 
-ws_dup(); ws_push(19); ws_sub();
-ws_jz(interpret_outc);
+    ws_dup(); ws_push(19); ws_sub();
+    ws_jz(interpret_outc);
 
-ws_dup(); ws_push(20); ws_sub();
-ws_jz(interpret_outn);
+    ws_dup(); ws_push(20); ws_sub();
+    ws_jz(interpret_outn);
 
-ws_dup(); ws_push(21); ws_sub();
-ws_jz(interpret_inc);
+    ws_dup(); ws_push(21); ws_sub();
+    ws_jz(interpret_inc);
 
-ws_dup(); ws_push(22); ws_sub();
-ws_jz(interpret_inn);
+    ws_dup(); ws_push(22); ws_sub();
+    ws_jz(interpret_inn);
 
-ws_dup(); ws_push(23); ws_sub();
-ws_jz(interpret_debugprintstack);
+    ws_dup(); ws_push(23); ws_sub();
+    ws_jz(interpret_debugprintstack);
 
-ws_dup(); ws_push(24); ws_sub();
-ws_jz(interpret_debugprintheap);
+    ws_dup(); ws_push(24); ws_sub();
+    ws_jz(interpret_debugprintheap);
 
-ws_jump(interpret_parse_error);
+    ws_jump(interpret_parse_error);
 
-ws_label(interpret_parse_error);
+    ws_label(interpret_parse_error);
     //debug_printstack
-ws_pushs("error: unknown instruction code ");
-ws_call(prints);
-ws_outn();
-ws_push(0);
-ws_call(printsln);
+    ws_pushs("error: unknown instruction code ");
+    ws_call(prints);
+    ws_outn();
+    ws_push(0);
+    ws_call(printsln);
 
-ws_jump(interpret_end);
+    ws_jump(interpret_end);
 
 
 
-ws_label(interpret_push);
-ws_push(3); ws_fetch();
+    ws_label(interpret_push);
+        ws_push(3); ws_fetch();
 
 #ifdef print_trace
-ws_pushs("push ");
-ws_call(prints);
-ws_dup();
-ws_outn();
-ws_push(0);
-ws_call(printsln);
+            ws_pushs("push ");
+            ws_call(prints);
+            ws_dup();
+            ws_outn();
+            ws_push(0);
+            ws_call(printsln);
 #endif
 
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+        ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_pop);
+    ws_label(interpret_pop);
 #ifdef print_trace
-ws_pushs("pop");
-ws_call(printsln);
+            ws_pushs("pop");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_jump(interpret_next_pop);
+      ws_call(stack_pop_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_label);
+    ws_label(interpret_label);
 #ifdef print_trace
-ws_pushs("label");
-ws_call(printsln);
+            ws_pushs("label");
+            ws_call(printsln);
 #endif
 
-ws_jump(interpret_next_pop);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_doub);
+    ws_label(interpret_doub);
 #ifdef print_trace
-ws_pushs("doub");
-ws_call(printsln);
+            ws_pushs("doub");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_dup();
-ws_call(stack_push_back);
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+        ws_call(stack_pop_back);
+        ws_dup();
+        ws_call(stack_push_back);
+        ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_swap);
+    ws_label(interpret_swap);
 #ifdef print_trace
-ws_pushs("swap");
-ws_call(printsln);
+            ws_pushs("swap");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_call(stack_push_back);
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+        ws_call(stack_pop_back);
+        ws_call(stack_pop_back);
+        ws_swap();
+        ws_call(stack_push_back);
+        ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_store);
+    ws_label(interpret_store);
 #ifdef print_trace
-ws_pushs("store");
-ws_call(printsln);
+            ws_pushs("store");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_call(heap_store);
-ws_jump(interpret_next_pop);
+        ws_call(stack_pop_back);
+        ws_call(stack_pop_back);
+        ws_swap();
+        ws_call(heap_store);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_retrive);
+    ws_label(interpret_retrive);
 #ifdef print_trace
-ws_pushs("retrive");
-ws_call(printsln);
+            ws_pushs("retrive");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(heap_retrive);
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+        ws_call(stack_pop_back);
+        ws_call(heap_retrive);
+        ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_call);
+    ws_label(interpret_call);
 #ifdef print_trace
-ws_pushs("call");
-ws_call(printsln);
+            ws_pushs("call");
+            ws_call(printsln);
 #endif
 
-ws_push(1);
-ws_fetch();// next ip to jump over data
-ws_call(stack_push_front);
+        ws_push(1);
+      ws_fetch();// next ip to jump over data
+        ws_call(stack_push_front);
 
-ws_push(3);
-ws_fetch();
+                ws_push(3);
+            ws_fetch();
 
-ws_push(1);
-ws_swap();
-ws_store();
+            ws_push(1);
+        ws_swap();
+    ws_store();
 
-ws_jump(interpret_next_pop);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_jump);
+    ws_label(interpret_jump);
 #ifdef print_trace
-ws_pushs("jump");
-ws_call(printsln);
+            ws_pushs("jump");
+            ws_call(printsln);
 #endif
 
-ws_push(3);
-ws_fetch();
+                ws_push(3);
+            ws_fetch();
 
-ws_push(1);
-ws_swap();
-ws_store();
-ws_jump(interpret_next_pop);
+            ws_push(1);
+        ws_swap();
+    ws_store();
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_jumpz);
+    ws_label(interpret_jumpz);
 #ifdef print_trace
-ws_pushs("jumpz");
-ws_call(printsln);
+            ws_pushs("jumpz");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_jz(interpret_jump);
-ws_jump(interpret_next_pop);
+        ws_call(stack_pop_back);
+        ws_jz(interpret_jump);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_jumpn);
+    ws_label(interpret_jumpn);
 #ifdef print_trace
-ws_pushs("jumpn");
-ws_call(printsln);
+            ws_pushs("jumpn");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_jn(interpret_jump);
-ws_jump(interpret_next_pop);
+        ws_call(stack_pop_back);
+        ws_jn(interpret_jump);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_ret);
+    ws_label(interpret_ret);
 #ifdef print_trace
-ws_pushs("ret");
-ws_call(printsln);
+            ws_pushs("ret");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_front);
+        ws_call(stack_pop_front);
 
-ws_push(1);
-ws_swap();
-ws_store();
-ws_jump(interpret_next_pop);
+            ws_push(1);
+            ws_swap();
+        ws_store();
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_exit);
+    ws_label(interpret_exit);
 #ifdef print_trace
-ws_pushs("exit");
-ws_call(printsln);
+            ws_pushs("exit");
+            ws_call(printsln);
 #endif
 
-ws_exit();
-ws_jump(interpret_next_pop);
+    ws_exit();
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_add);
+    ws_label(interpret_add);
 #ifdef print_trace
-ws_pushs("add");
-ws_call(printsln);
+            ws_pushs("add");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_add();
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
+    ws_swap();
+    ws_add();
+    ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_sub);
+    ws_label(interpret_sub);
 #ifdef print_trace
-ws_pushs("sub");
-ws_call(printsln);
+            ws_pushs("sub");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_sub();
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
+    ws_swap();
+    ws_sub();
+    ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_mul);
+    ws_label(interpret_mul);
 #ifdef print_trace
-ws_pushs("mul");
-ws_call(printsln);
+            ws_pushs("mul");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_mul();
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
+    ws_swap();
+    ws_mul();
+    ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_div);
+    ws_label(interpret_div);
 #ifdef print_trace
-ws_pushs("div");
-ws_call(printsln);
+            ws_pushs("div");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_div();
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
+    ws_swap();
+    ws_div();
+    ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_mod);
+    ws_label(interpret_mod);
 #ifdef print_trace
-ws_pushs("mod");
-ws_call(printsln);
+            ws_pushs("mod");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_call(stack_pop_back);
-ws_swap();
-ws_mod();
-ws_call(stack_push_back);
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
+    ws_swap();
+    ws_mod();
+    ws_call(stack_push_back);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_outc);
+    ws_label(interpret_outc);
 #ifdef print_trace
-ws_pushs("outc");
-ws_call(printsln);
+            ws_pushs("outc");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_outc();
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_outc();
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_outn);
+    ws_label(interpret_outn);
 #ifdef print_trace
-ws_pushs("outn");
-ws_call(printsln);
+            ws_pushs("outn");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
-ws_outn();
-ws_jump(interpret_next_pop);
+    ws_call(stack_pop_back);
+    ws_outn();
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_inc);
+    ws_label(interpret_inc);
 #ifdef print_trace
-ws_pushs("inc");
-ws_call(printsln);
+            ws_pushs("inc");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
 
-ws_push(8);
-ws_readc();
-ws_push(8); ws_fetch();
+        ws_push(8);
+    ws_readc();
+    ws_push(8); ws_fetch();
 
-ws_call(heap_store);
+    ws_call(heap_store);
 
-ws_jump(interpret_next_pop);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_inn);
+    ws_label(interpret_inn);
 #ifdef print_trace
-ws_pushs("inn");
-ws_call(printsln);
+            ws_pushs("inn");
+            ws_call(printsln);
 #endif
 
-ws_call(stack_pop_back);
+    ws_call(stack_pop_back);
 
-ws_push(8);
-ws_readn();
-ws_push(8); ws_fetch();
+        ws_push(8);
+    ws_readn();
+    ws_push(8); ws_fetch();
 
-ws_call(heap_store);
-ws_jump(interpret_next_pop);
+    ws_call(heap_store);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_debugprintstack);
+    ws_label(interpret_debugprintstack);
 #ifdef print_trace
-ws_pushs("debug_printstack");
-ws_call(printsln);
+            ws_pushs("debug_printstack");
+            ws_call(printsln);
 #endif
 
-ws_call(interpreter_debug_printstack);
-ws_jump(interpret_next_pop);
+    ws_call(interpreter_debug_printstack);
+    ws_jump(interpret_next_pop);
 
-ws_label(interpret_debugprintheap);
+    ws_label(interpret_debugprintheap);
 #ifdef print_trace
-ws_pushs("debug_printheap");
-ws_call(printsln);
+            ws_pushs("debug_printheap");
+            ws_call(printsln);
 #endif
 
-ws_call(interpreter_debug_printheap);
-ws_jump(interpret_next_pop);
+    ws_call(interpreter_debug_printheap);
+    ws_jump(interpret_next_pop);
 
 
 
-ws_label(interpret_end);
-ws_return();
+    ws_label(interpret_end);
+    ws_return();
 
 
 
 
 
 ws_label(interpreter_debug_printheap);
-ws_pushs("Heap: [");
-ws_call(prints);
+    ws_pushs("Heap: [");
+    ws_call(prints);
 
-ws_push(28);
-ws_fetch();// heap start
+        ws_push(28);
+    ws_fetch();// heap start
 
-ws_label(interpret_debugprintheap_loop);
-ws_dup();
-ws_push(29);
-ws_fetch();// heap end
-ws_sub();
-ws_jz(interpret_debugprintheap_loop_end);
+    ws_label(interpret_debugprintheap_loop);
+    ws_dup();
+      ws_push(29);
+    ws_fetch();// heap end
+    ws_sub();
+    ws_jz(interpret_debugprintheap_loop_end);
 
     //???
     //    doub
     //outN
 
-ws_dup();
-ws_fetch();
+        ws_dup();
+    ws_fetch();
 
-ws_outn();
-ws_pushs(",");
-ws_call(prints);
+    ws_outn();
+    ws_pushs(",");
+    ws_call(prints);
 
-ws_push(1); ws_add();
-ws_jump(interpret_debugprintheap_loop);
+    ws_push(1); ws_add();
+    ws_jump(interpret_debugprintheap_loop);
 
-ws_label(interpret_debugprintheap_loop_end);
+    ws_label(interpret_debugprintheap_loop_end);
 
-ws_drop();
+    ws_drop();
 
-ws_pushs("]");
-ws_call(printsln);
-ws_return();
+    ws_pushs("]");
+    ws_call(printsln);
+    ws_return();
 
 
 
@@ -1353,56 +1343,56 @@ ws_return();
 
 
 ws_label(interpreter_debug_printstack);
-ws_pushs("Stack: [");
-ws_call(prints);
+    ws_pushs("Stack: [");
+    ws_call(prints);
 
-ws_push(26);
-ws_fetch();// stack start
+        ws_push(26);
+    ws_fetch();// stack start
 
-ws_label(interpret_debugprintstack_loop);
-ws_dup();
-ws_push(27);
-ws_fetch();// stack end
-ws_sub();
-ws_jz(interpret_debugprintstack_loop_end);
+    ws_label(interpret_debugprintstack_loop);
+   ws_dup();
+      ws_push(27);
+    ws_fetch();// stack end
+    ws_sub();
+    ws_jz(interpret_debugprintstack_loop_end);
 
-ws_dup();
-ws_fetch();
+        ws_dup();
+    ws_fetch();
 
-ws_outn();
-ws_pushs(",");
-ws_call(prints);
+    ws_outn();
+    ws_pushs(",");
+    ws_call(prints);
 
-ws_push(1); ws_add();
-ws_jump(interpret_debugprintstack_loop);
+    ws_push(1); ws_add();
+    ws_jump(interpret_debugprintstack_loop);
 
-ws_label(interpret_debugprintstack_loop_end);
+    ws_label(interpret_debugprintstack_loop_end);
 
-ws_drop();
+    ws_drop();
 
-ws_pushs("]");
-ws_call(printsln);
-ws_return();
+    ws_pushs("]");
+    ws_call(printsln);
+    ws_return();
 
 
 
 
 ws_label(intro);
-ws_pushs("WhiteSpace interpreter written in Whitespace");
-ws_call(printsln);
-ws_pushs("Made by Oliver Burghard Smarty21@gmx.net");
-ws_call(printsln);
-ws_pushs("in his free time for your and his joy");
-ws_call(printsln);
-ws_pushs("good time and join me to get Whitespace ready for business");
-ws_call(printsln);
-ws_pushs("For any other information dial 1-900-WHITESPACE");
-ws_call(printsln);
-ws_pushs("Or get soon info at www.WHITESPACE-WANTS-TO-BE-TAKEN-SERIOUS.org");
-ws_call(printsln);
-ws_pushs("please enter the program and terminate via 3xEnter,'quit',3xEnter");
-ws_call(printsln);
-ws_return();
+    ws_pushs("WhiteSpace interpreter written in Whitespace");
+    ws_call(printsln);
+    ws_pushs("Made by Oliver Burghard Smarty21@gmx.net");
+    ws_call(printsln);
+    ws_pushs("in his free time for your and his joy");
+    ws_call(printsln);
+    ws_pushs("good time and join me to get Whitespace ready for business");
+    ws_call(printsln);
+    ws_pushs("For any other information dial 1-900-WHITESPACE");
+    ws_call(printsln);
+    ws_pushs("Or get soon info at www.WHITESPACE-WANTS-TO-BE-TAKEN-SERIOUS.org");
+    ws_call(printsln);
+    ws_pushs("please enter the program and terminate via 3xEnter,'quit',3xEnter");
+    ws_call(printsln);
+    ws_return();
 
 
 
@@ -1424,27 +1414,27 @@ ws_return();
 // [5] inst code pointer
 ws_label(compile_instruction_code);
 
-ws_push(3);
-ws_swap();
+    ws_push(3);
+  ws_swap();
 ws_store();
 
-ws_push(2);
-ws_swap();
+    ws_push(2);
+  ws_swap();
 ws_store();
 
-ws_push(1);
-ws_swap();
+    ws_push(1);
+  ws_swap();
 ws_store();
 
 
-ws_push(4);
-ws_push(1);
-ws_fetch();
+  ws_push(4);
+    ws_push(1);
+  ws_fetch();
 ws_store();
 
-ws_push(5);
-ws_push(3);
-ws_fetch();
+  ws_push(5);
+    ws_push(3);
+  ws_fetch();
 ws_store();
 // all local variables set
 
@@ -1452,12 +1442,12 @@ ws_label(compile_inst_code_loop_restart);
 
 // p < e - 2
 // p - e + 2 < 0
-ws_push(4);
-ws_fetch();
-ws_push(2);
-ws_fetch();
+    ws_push(4);
+  ws_fetch();
+      ws_push(2);
+    ws_fetch();
 ws_sub();
-ws_push(3); // end - 3 because at least 3 chars should be left
+  ws_push(3); // end - 3 because at least 3 chars should be left
 ws_add();
 
 // finished, all data done
@@ -1467,7 +1457,7 @@ ws_jump(compile_inst_code_end);
 
 ws_label(compile_inst_code_continue);
 
-ws_push(4);
+  ws_push(4);
 ws_fetch();
 
 ws_call(getinst);
@@ -1475,39 +1465,39 @@ ws_call(getinst);
 
 
 //increment code pointer
-ws_push(4);
-ws_fetch();
-ws_add();
-ws_push(4);
-ws_swap();
+        ws_push(4);
+      ws_fetch();
+    ws_add();
+    ws_push(4);
+  ws_swap();
 ws_store();
 
 // save inst
-ws_push(5);
-ws_fetch();
-ws_swap();
+      ws_push(5);
+    ws_fetch();
+  ws_swap();
 ws_store();
 
 //increment compiled code pointer
-ws_push(5);
-ws_push(5);
-ws_fetch();
-ws_push(1);
-ws_add();
+  ws_push(5);
+      ws_push(5);
+    ws_fetch();
+    ws_push(1);
+  ws_add();
 ws_store();
 
 // save number
-ws_push(5);
-ws_fetch();
-ws_swap();
+      ws_push(5);
+    ws_fetch();
+  ws_swap();
 ws_store();
 
 //increment compiled code pointer
-ws_push(5);
-ws_push(5);
-ws_fetch();
-ws_push(1);
-ws_add();
+  ws_push(5);
+      ws_push(5);
+    ws_fetch();
+    ws_push(1);
+  ws_add();
 ws_store();
 
 ws_jump(compile_inst_code_loop_restart);
@@ -1517,7 +1507,7 @@ ws_label(compile_inst_code_end);
 
 // get inst code pointer
 // return it
-ws_push(5);
+  ws_push(5);
 ws_fetch();
 
 ws_return();
@@ -1539,72 +1529,72 @@ ws_return();
 // [18] address of instruction start
 
 ws_label(getinst);
-ws_push(18);
-ws_swap();
+    ws_push(18);
+  ws_swap();
 ws_store();
 
-ws_push(18);
+  ws_push(18);
 ws_fetch();
 
-ws_dup();
-ws_fetch();
-ws_push(11);
-ws_swap();
+      ws_dup();
+    ws_fetch();
+    ws_push(11);
+  ws_swap();
 ws_store();
 
-ws_push(1);
+  ws_push(1);
 ws_add();
 
-ws_dup();
-ws_fetch();
-ws_push(12);
-ws_swap();
+      ws_dup();
+    ws_fetch();
+    ws_push(12);
+  ws_swap();
 ws_store();
 
-ws_push(1);
+  ws_push(1);
 ws_add();
 
-ws_dup();
-ws_fetch();
-ws_push(13);
-ws_swap();
+      ws_dup();
+    ws_fetch();
+    ws_push(13);
+  ws_swap();
 ws_store();
 
-ws_push(1);
+  ws_push(1);
 ws_add();
 
-ws_dup();
-ws_fetch();
-ws_push(14);
-ws_swap();
+      ws_dup();
+    ws_fetch();
+    ws_push(14);
+  ws_swap();
 ws_store();
 
-ws_push(1);
+  ws_push(1);
 ws_add();
 
-ws_fetch();
-ws_push(15);
-ws_swap();
+    ws_fetch();
+    ws_push(15);
+  ws_swap();
 ws_store();
 
 
 
 
-ws_push(11);
-ws_fetch();
-ws_push(3);
-ws_mul();
-ws_push(12);
-ws_fetch();
+      ws_push(11);
+    ws_fetch();
+    ws_push(3);
+  ws_mul();
+    ws_push(12);
+  ws_fetch();
 ws_add();
 // now we have [1]*3+[2]
 ws_dup();
 ws_jz(getinst_push);
 
-ws_push(3);
-ws_mul();
-ws_push(13);
-ws_fetch();
+    ws_push(3);
+  ws_mul();
+    ws_push(13);
+  ws_fetch();
 ws_add();
 // now we have [1]*9+[2]*3+[3]
 
@@ -1644,10 +1634,10 @@ ws_jz(getinst_ret);
 ws_dup(); ws_push(26); ws_sub();
 ws_jz(getinst_exit);
 
-ws_push(3);
-ws_mul();
-ws_push(14);
-ws_fetch();
+    ws_push(3);
+  ws_mul();
+    ws_push(14);
+  ws_fetch();
 ws_add();
 // now we have [1]*27+[2]*9+[3]*3+[4]
 
@@ -1678,10 +1668,10 @@ ws_jz(getinst_inc);
 ws_dup(); ws_push(49); ws_sub();
 ws_jz(getinst_inn);
 
-ws_push(3);
-ws_mul();
-ws_push(15);
-ws_fetch();
+    ws_push(3);
+  ws_mul();
+    ws_push(15);
+  ws_fetch();
 ws_add();
 // now we have [1]*81+[2]*27+[3]*9+[4]*3+[5]
 
@@ -1711,8 +1701,8 @@ ws_call(prints);
 ws_outn();
 ws_push(0);
 ws_call(printsln);
-// debug_printheap
-// debug_printstack
+// debug_printheap()
+// debug_printstack()
 
 ws_push(-1);
 ws_push(100);
@@ -1721,25 +1711,25 @@ ws_return();
 
 ws_label(getinst_push);
 ws_drop();
-ws_push(18);
-ws_fetch();//code start
-ws_push(2); // inst length
+    ws_push(18);
+  ws_fetch();//code start
+  ws_push(2); // inst length
 ws_add();
 ws_call(scan_number);
-ws_push(16);
-ws_swap();
+    ws_push(16);
+  ws_swap();
 ws_store();
-ws_push(17);
-ws_swap();
+    ws_push(17);
+  ws_swap();
 ws_store();
 
-ws_push(16);
+  ws_push(16);
 ws_fetch();
 // number
 ws_push(1); //inst number
-ws_push(17);
-ws_fetch();//number length
-ws_push(2); //inst length
+    ws_push(17);
+  ws_fetch();//number length
+  ws_push(2); //inst length
 ws_add();
 ws_return();
 
@@ -1780,121 +1770,121 @@ ws_return();
 
 ws_label(getinst_label);
 ws_drop();
-ws_push(18);
-ws_fetch();//code start
-ws_push(3); // inst length
+    ws_push(18);
+  ws_fetch();//code start
+  ws_push(3); // inst length
 ws_add();
 ws_call(scan_label);
-ws_push(16);
-ws_swap();
+    ws_push(16);
+  ws_swap();
 ws_store();
-ws_push(17);
-ws_swap();
+    ws_push(17);
+  ws_swap();
 ws_store();
 
-ws_push(16);
+  ws_push(16);
 ws_fetch();
 // number
 ws_push(7); //inst number
-ws_push(17);
-ws_fetch();//number length
-ws_push(3); //inst length
+    ws_push(17);
+  ws_fetch();//number length
+  ws_push(3); //inst length
 ws_add();
 ws_return();
 
 ws_label(getinst_call);
 ws_drop();
-ws_push(18);
-ws_fetch();//code start
-ws_push(3); // inst length
+    ws_push(18);
+  ws_fetch();//code start
+  ws_push(3); // inst length
 ws_add();
 ws_call(scan_label);
-ws_push(16);
-ws_swap();
+    ws_push(16);
+  ws_swap();
 ws_store();
-ws_push(17);
-ws_swap();
+    ws_push(17);
+  ws_swap();
 ws_store();
 
-ws_push(16);
+  ws_push(16);
 ws_fetch();
 // number
 ws_push(8); //inst number
-ws_push(17);
-ws_fetch();//number length
-ws_push(3); //inst length
+    ws_push(17);
+  ws_fetch();//number length
+  ws_push(3); //inst length
 ws_add();
 ws_return();
 
 ws_label(getinst_jump);
 ws_drop();
-ws_push(18);
-ws_fetch();//code start
-ws_push(3); // inst length
+    ws_push(18);
+  ws_fetch();//code start
+  ws_push(3); // inst length
 ws_add();
 ws_call(scan_label);
-ws_push(16);
-ws_swap();
+    ws_push(16);
+  ws_swap();
 ws_store();
-ws_push(17);
-ws_swap();
+    ws_push(17);
+  ws_swap();
 ws_store();
 
-ws_push(16);
+  ws_push(16);
 ws_fetch();
 // number
 ws_push(9); //inst number
-ws_push(17);
-ws_fetch();//number length
-ws_push(3); //inst length
+    ws_push(17);
+  ws_fetch();//number length
+  ws_push(3); //inst length
 ws_add();
 ws_return();
 
 ws_label(getinst_jumpz);
 ws_drop();
-ws_push(18);
-ws_fetch();//code start
-ws_push(3); // inst length
+    ws_push(18);
+  ws_fetch();//code start
+  ws_push(3); // inst length
 ws_add();
 ws_call(scan_label);
-ws_push(16);
-ws_swap();
+    ws_push(16);
+  ws_swap();
 ws_store();
-ws_push(17);
-ws_swap();
+    ws_push(17);
+  ws_swap();
 ws_store();
 
-ws_push(16);
+  ws_push(16);
 ws_fetch();
 // number
 ws_push(10); //inst number
-ws_push(17);
-ws_fetch();//number length
-ws_push(3); //inst length
+    ws_push(17);
+  ws_fetch();//number length
+  ws_push(3); //inst length
 ws_add();
 ws_return();
 
 ws_label(getinst_jumpn);
 ws_drop();
-ws_push(18);
-ws_fetch();//code start
-ws_push(3); // inst length
+    ws_push(18);
+  ws_fetch();//code start
+  ws_push(3); // inst length
 ws_add();
 ws_call(scan_label);
-ws_push(16);
-ws_swap();
+    ws_push(16);
+  ws_swap();
 ws_store();
-ws_push(17);
-ws_swap();
+    ws_push(17);
+  ws_swap();
 ws_store();
 
-ws_push(16);
+  ws_push(16);
 ws_fetch();
 // number
 ws_push(11); //inst number
-ws_push(17);
-ws_fetch();//number length
-ws_push(3); //inst length
+    ws_push(17);
+  ws_fetch();//number length
+  ws_push(3); //inst length
 ws_add();
 ws_return();
 
@@ -2041,156 +2031,156 @@ ws_return();
 // [43] actual pointer
 
 ws_label(scan_number);
-ws_push(42);
-ws_push(1);
-ws_store();
+        ws_push(42);
+        ws_push(1);
+    ws_store();
 
-ws_push(41);
-ws_push(0);
-ws_store();
+        ws_push(41);
+        ws_push(0);
+    ws_store();
 
-ws_push(40);
-ws_swap();
-ws_store();
+            ws_push(40);
+        ws_swap();
+    ws_store();
 
-ws_push(43);
-ws_push(40);
-ws_fetch();
-ws_store();
+        ws_push(43);
+            ws_push(40);
+        ws_fetch();
+    ws_store();
 
     //label scan_number_start
-ws_push(43);
-ws_fetch();
-ws_fetch();
+            ws_push(43);
+        ws_fetch();
+    ws_fetch();
     // got the char
 
-ws_dup();
-ws_jz(scan_number_positive_pop);
+    ws_dup();
+    ws_jz(scan_number_positive_pop);
 
-ws_dup();
-ws_push(1);
-ws_sub();
-ws_jz(scan_number_negative_pop);
+        ws_dup();
+        ws_push(1);
+    ws_sub();
+    ws_jz(scan_number_negative_pop);
 
-ws_dup();
-ws_push(2);
-ws_sub();
-ws_jz(scan_number_no_sign_pop_next);//maybe error, number without sign
+        ws_dup();
+        ws_push(2);
+    ws_sub();
+    ws_jz(scan_number_no_sign_pop_next);//maybe error, number without sign
 
-ws_jump(scan_number_finished_error);
+    ws_jump(scan_number_finished_error);
 
-ws_label(scan_number_finished_error);
-ws_pushs("error: unknown type (0-2): ");
-ws_call(prints);
-ws_outn();
-ws_push(0);
-ws_call(printsln);
-// debug_printheap
-// debug_printstack
-ws_jump(scan_number_finished);
+    ws_label(scan_number_finished_error);
+    ws_pushs("error: unknown type (0-2): ");
+    ws_call(prints);
+    ws_outn();
+    ws_push(0);
+    ws_call(printsln);
+//     debug_printheap()
+//     debug_printstack()
+    ws_jump(scan_number_finished);
 
-ws_label(scan_number_positive_pop);
-ws_drop();
-ws_push(42);
-ws_push(1);
-ws_store();
-ws_jump(scan_number_scan_digits);
+    ws_label(scan_number_positive_pop);
+    ws_drop();
+        ws_push(42);
+        ws_push(1);
+    ws_store();
+    ws_jump(scan_number_scan_digits);
 
-ws_label(scan_number_negative_pop);
-ws_drop();
-ws_push(42);
-ws_push(-1);
-ws_store();
-ws_jump(scan_number_scan_digits);
+    ws_label(scan_number_negative_pop);
+    ws_drop();
+        ws_push(42);
+        ws_push(-1);
+    ws_store();
+    ws_jump(scan_number_scan_digits);
 
-ws_label(scan_number_scan_digits);
-ws_push(43);
-ws_fetch();
-ws_push(1);
-ws_add();
-ws_push(43);
-ws_swap();
-ws_store();
+    ws_label(scan_number_scan_digits);
+                    ws_push(43);
+                ws_fetch();
+                ws_push(1);
+            ws_add();
+            ws_push(43);
+        ws_swap();
+    ws_store();
     // pointer to next char
 
-ws_push(43);
-ws_fetch();
-ws_fetch();
+            ws_push(43);
+        ws_fetch();
+    ws_fetch();
     // got the char
 
-ws_dup();
-ws_jz(scan_number_digit_0_pop);
+    ws_dup();
+    ws_jz(scan_number_digit_0_pop);
 
-ws_dup();
-ws_push(1);
-ws_sub();
-ws_jz(scan_number_digit_1_pop);
+        ws_dup();
+        ws_push(1);
+    ws_sub();
+    ws_jz(scan_number_digit_1_pop);
 
-ws_dup();
-ws_push(2);
-ws_sub();
-ws_jz(scan_number_finished_pop_next);
+        ws_dup();
+        ws_push(2);
+    ws_sub();
+    ws_jz(scan_number_finished_pop_next);
 
-ws_jump(scan_number_finished_error);
+    ws_jump(scan_number_finished_error);
 
-ws_label(scan_number_digit_0_pop);
-ws_drop();
-ws_push(41);
-ws_push(41);
-ws_fetch();
-ws_push(2);
-ws_mul();
-ws_push(0);
-ws_add();
-ws_store();
-ws_jump(scan_number_scan_digits);
+    ws_label(scan_number_digit_0_pop);
+    ws_drop();
+        ws_push(41);
+                    ws_push(41);
+                ws_fetch();
+                ws_push(2);
+            ws_mul();
+            ws_push(0);
+        ws_add();
+    ws_store();
+    ws_jump(scan_number_scan_digits);
 
-ws_label(scan_number_digit_1_pop);
-ws_drop();
-ws_push(41);
-ws_push(41);
-ws_fetch();
-ws_push(2);
-ws_mul();
-ws_push(1);
-ws_add();
-ws_store();
-ws_jump(scan_number_scan_digits);
+    ws_label(scan_number_digit_1_pop);
+    ws_drop();
+        ws_push(41);
+                    ws_push(41);
+                ws_fetch();
+                ws_push(2);
+            ws_mul();
+            ws_push(1);
+        ws_add();
+    ws_store();
+    ws_jump(scan_number_scan_digits);
 
-ws_label(scan_number_no_sign_pop_next);
-ws_pushs("warning: number without a sign");
-ws_call(printsln);
+    ws_label(scan_number_no_sign_pop_next);
+    ws_pushs("warning: number without a sign");
+    ws_call(printsln);
 
-ws_jump(scan_number_finished_pop_next);
+    ws_jump(scan_number_finished_pop_next);
 
-ws_label(scan_number_finished_pop_next);
-ws_drop();
+    ws_label(scan_number_finished_pop_next);
+    ws_drop();
 
-ws_push(43);
-ws_fetch();
-ws_push(1);
-ws_add();
-ws_push(43);
-ws_swap();
-ws_store();
+                    ws_push(43);
+                ws_fetch();
+                ws_push(1);
+            ws_add();
+            ws_push(43);
+        ws_swap();
+    ws_store();
     // pointer to next char
-ws_label(scan_number_finished);
+    ws_label(scan_number_finished);
 
-ws_push(43);
-ws_fetch();
-ws_push(40);
-ws_fetch();
-ws_sub();
+            ws_push(43);
+        ws_fetch();
+            ws_push(40);
+        ws_fetch();
+    ws_sub();
     // length
 
-ws_push(41);
-ws_fetch();
-ws_push(42);
-ws_fetch();
-ws_mul();
+            ws_push(41);
+        ws_fetch();
+            ws_push(42);
+        ws_fetch();
+    ws_mul();
     // number
 
-ws_return();
+    ws_return();
 
 
 
@@ -2209,100 +2199,100 @@ ws_return();
 // [43] actual pointer
 
 ws_label(scan_label);
-ws_push(41);
-ws_push(1);
-ws_store();
+        ws_push(41);
+        ws_push(1);
+    ws_store();
 
-ws_push(40);
-ws_swap();
-ws_store();
+            ws_push(40);
+        ws_swap();
+    ws_store();
 
-ws_push(43);
-ws_push(40);
-ws_fetch();
-ws_store();
+        ws_push(43);
+            ws_push(40);
+        ws_fetch();
+    ws_store();
 
-ws_label(scan_label_scan_digits);
-ws_push(43);
-ws_fetch();
-ws_fetch();
+    ws_label(scan_label_scan_digits);
+            ws_push(43);
+        ws_fetch();
+    ws_fetch();
     // got the char
 
-ws_push(43);
-ws_fetch();
-ws_push(1);
-ws_add();
-ws_push(43);
-ws_swap();
-ws_store();
+                    ws_push(43);
+                ws_fetch();
+                ws_push(1);
+            ws_add();
+            ws_push(43);
+        ws_swap();
+    ws_store();
     // pointer to next char
 
-ws_dup();
-ws_jz(scan_label_digit_0_pop);
+    ws_dup();
+    ws_jz(scan_label_digit_0_pop);
 
-ws_dup();
-ws_push(1);
-ws_sub();
-ws_jz(scan_label_digit_1_pop);
+        ws_dup();
+        ws_push(1);
+    ws_sub();
+    ws_jz(scan_label_digit_1_pop);
 
-ws_dup();
-ws_push(2);
-ws_sub();
-ws_jz(scan_label_finished_pop);
+        ws_dup();
+        ws_push(2);
+    ws_sub();
+    ws_jz(scan_label_finished_pop);
 
-ws_jump(scan_label_finished_error);
+    ws_jump(scan_label_finished_error);
 
-ws_label(scan_label_finished_error);
-ws_pushs("error: unknown type (0-2): ");
-ws_call(prints);
-ws_outn();
-ws_push(0);
-ws_call(printsln);
-// debug_printheap
-// debug_printstack
-ws_jump(scan_label_finished);
+    ws_label(scan_label_finished_error);
+    ws_pushs("error: unknown type (0-2): ");
+    ws_call(prints);
+    ws_outn();
+    ws_push(0);
+    ws_call(printsln);
+//     debug_printheap()
+//     debug_printstack()
+    ws_jump(scan_label_finished);
 
-ws_label(scan_label_digit_0_pop);
-ws_drop();
-ws_push(41);
-ws_push(41);
-ws_fetch();
-ws_push(2);
-ws_mul();
-ws_push(0);
-ws_add();
-ws_store();
-ws_jump(scan_label_scan_digits);
+    ws_label(scan_label_digit_0_pop);
+    ws_drop();
+        ws_push(41);
+                    ws_push(41);
+                ws_fetch();
+                ws_push(2);
+            ws_mul();
+            ws_push(0);
+        ws_add();
+    ws_store();
+    ws_jump(scan_label_scan_digits);
 
-ws_label(scan_label_digit_1_pop);
-ws_drop();
-ws_push(41);
-ws_push(41);
-ws_fetch();
-ws_push(2);
-ws_mul();
-ws_push(1);
-ws_add();
-ws_store();
-ws_jump(scan_label_scan_digits);
+    ws_label(scan_label_digit_1_pop);
+    ws_drop();
+        ws_push(41);
+                    ws_push(41);
+                ws_fetch();
+                ws_push(2);
+            ws_mul();
+            ws_push(1);
+        ws_add();
+    ws_store();
+    ws_jump(scan_label_scan_digits);
 
-ws_label(scan_label_finished_pop);
-ws_drop();
+    ws_label(scan_label_finished_pop);
+    ws_drop();
 
-ws_label(scan_label_finished);
+    ws_label(scan_label_finished);
 
-ws_push(43);
-ws_fetch();
-ws_push(40);
-ws_fetch();
-ws_sub();
+            ws_push(43);
+        ws_fetch();
+            ws_push(40);
+        ws_fetch();
+    ws_sub();
     // length
 
-ws_push(41);
-ws_fetch();
+        ws_push(41);
+    ws_fetch();
     // signiture
 
-ws_return();
+    ws_return();
 
 
 
@@ -2337,16 +2327,16 @@ ws_return();
 // //instruction pointer
 ws_label(compile_byte_code);
 
-ws_push(3);
-ws_swap();
+    ws_push(3);
+  ws_swap();
 ws_store();
 
-ws_push(2);
-ws_swap();
+    ws_push(2);
+  ws_swap();
 ws_store();
 
-ws_push(1);
-ws_swap();
+    ws_push(1);
+  ws_swap();
 ws_store();
 
 //  push 10
@@ -2354,16 +2344,16 @@ ws_store();
 //  retrive
 //store
 
-ws_push(4);
+  ws_push(4);
   // start of code
-ws_push(1);
-ws_fetch();
+    ws_push(1);
+  ws_fetch();
 ws_store();
 
-ws_push(5);
+  ws_push(5);
   // start of compiled code
-ws_push(3);
-ws_fetch();
+    ws_push(3);
+  ws_fetch();
 ws_store();
 
 // main loop
@@ -2375,42 +2365,42 @@ ws_drop();
 
 
 ws_label(compile_byte_code_loop_restart);
-ws_push(4);
-ws_fetch();
-ws_push(2);
-ws_fetch();
+    ws_push(4);
+  ws_fetch();
+    ws_push(2);
+  ws_fetch();
 ws_sub();
 
 // finished, all data done
-ws_jpz(compile_byte_code_finished);
+ws_jzp(compile_byte_code_finished);
 
-ws_push(4);
-ws_fetch();
+    ws_push(4);
+  ws_fetch();
 ws_fetch();
 ws_call(gettype);
 ws_dup();
 
 //increment code pointer
-ws_push(4);
-ws_push(4);
-ws_fetch();
-ws_push(1);
-ws_add();
+  ws_push(4);
+      ws_push(4);
+    ws_fetch();
+    ws_push(1);
+  ws_add();
 ws_store();
 
 ws_jn(compile_byte_code_loop_restart_pop);
 
-ws_push(5);
-ws_fetch();
-ws_swap();
+      ws_push(5);
+    ws_fetch();
+  ws_swap();
 ws_store();
 
 //increment compiled code pointer
-ws_push(5);
-ws_push(5);
-ws_fetch();
-ws_push(1);
-ws_add();
+  ws_push(5);
+      ws_push(5);
+    ws_fetch();
+    ws_push(1);
+  ws_add();
 ws_store();
 
 ws_jump(compile_byte_code_loop_restart);
@@ -2420,7 +2410,7 @@ ws_jump(compile_byte_code_loop_restart);
 ws_label(compile_byte_code_finished);
 
 // compiled code pointer
-ws_push(5);
+  ws_push(5);
 ws_fetch();
 
 // end of compiled code on stack
@@ -2493,8 +2483,8 @@ ws_return();
 ws_label(read_program);
 
 // param 1 to [2]
-ws_push(2);
-ws_swap();
+  ws_push(2);
+  ws_swap();
 ws_store();
 
 ws_label(read_start_reset);
@@ -2511,8 +2501,8 @@ ws_drop();
 ws_label(read_start_noreset);
 
 
-ws_push(2);
-ws_fetch();
+    ws_push(2);
+  ws_fetch();
 ws_readc();//number to heap
 //Nummer einlesen
 
@@ -2521,18 +2511,18 @@ ws_readc();//number to heap
 //outn
 
 //number to stack
-ws_push(3);
-ws_push(2);
-ws_fetch();
-ws_fetch();
+    ws_push(3);
+        ws_push(2);
+      ws_fetch();
+    ws_fetch();
 ws_store();
 
 
-ws_push(2);
-ws_push(2);
-ws_fetch();
-ws_push(1);
-ws_add();
+  ws_push(2);
+      ws_push(2);
+    ws_fetch();
+    ws_push(1);
+  ws_add();
 ws_store();
 
 ws_push(1); ws_fetch();
@@ -2637,8 +2627,8 @@ ws_jump(read_start_reset);
 
 
 ws_label(read_onNext_pop);
-ws_push(1); ws_fetch();
-ws_push(1); ws_add();
+        ws_push(1); ws_fetch();
+    ws_push(1); ws_add();
 ws_push(1); ws_swap(); ws_store();
 
 ws_push(1); ws_fetch();
@@ -2649,7 +2639,7 @@ ws_jump(read_start_noreset);
 
 
 ws_label(read_end);
-ws_push(2);
+  ws_push(2);
 ws_fetch();
 
 ws_return();
@@ -2676,25 +2666,25 @@ ws_jump(read_start_reset);
 
 
 ws_label(onReturn);
-ws_push(1);
+  ws_push(1);
 
-ws_push(1);
-ws_fetch();
-ws_push(1);
-ws_add();
+      ws_push(1);
+    ws_fetch();
+    ws_push(1);
+  ws_add();
 ws_store();
 
 
-ws_push(1);
-ws_fetch();
+  ws_push(1);
+  ws_fetch();
 
 //  doub
 //  outN
 
-ws_push(6);
+  ws_push(6);
 ws_sub();
 
 ws_jn(read_start_noreset);
 
-// print_atom_list();
+
 }
