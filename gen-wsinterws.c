@@ -1,3 +1,7 @@
+
+#define ATOMISE_LABELS
+#define xVERBOSE
+
 #include "ws_gencode.h"
 main() {
 /*
@@ -7,7 +11,11 @@ print_trace      print each instruction when it is run
 
 */
 
-ws_call(atom("main"));
+#undef ws_jnz
+#define ws_jnz ws_jzn
+#define ws_jpz ws_jzp
+
+ws_call(main);
 ws_exit();
 
 
@@ -33,12 +41,12 @@ ws_exit();
 // var 100-... is reserved for big data
 */
 
-ws_label(atom("main"));
-ws_call(atom("run"));
+ws_label(main);
+ws_call(run);
 ws_return();
 
-ws_label(atom("run"));
-ws_call(atom("intro"));
+ws_label(run);
+ws_call(intro);
 
 //pushs "beginning reading"
 //call printsln
@@ -52,7 +60,7 @@ ws_store();
 ws_push(20);
 ws_fetch();
 
-ws_call(atom("read_program"));
+ws_call(read_program);
 
 ws_push(21);
 ws_swap();
@@ -66,7 +74,7 @@ ws_add();
 ws_store();
 
 ws_pushs("-- WS Interpreter WS -------------------------------------------");
-ws_call(atom("printsln"));
+ws_call(printsln);
 
 //pushs "compiling to byte code"
 //call printsln
@@ -78,7 +86,7 @@ ws_fetch();
 ws_push(22);
 ws_fetch();
 
-ws_call(atom("compile_byte_code"));
+ws_call(compile_byte_code);
 
 ws_push(23);
 ws_swap();
@@ -103,7 +111,7 @@ ws_fetch();
 ws_push(24);
 ws_fetch();
 
-ws_call(atom("compile_instruction_code"));
+ws_call(compile_instruction_code);
 
 ws_push(25);
 ws_swap();
@@ -112,7 +120,7 @@ ws_store();
 //pushs "compiling labels"
 //call printsln
 
-ws_call(atom("compile_labels"));
+ws_call(compile_labels);
 
 
 
@@ -134,7 +142,7 @@ ws_store();//stack end ;same as start
 ws_push(26);
 ws_fetch();
 ws_push(10);
-ws_call(atom("mem_zero"));
+ws_call(mem_zero);
 
 //pushs "creating heap"
 //call printsln
@@ -154,7 +162,7 @@ ws_store();// heap end
 ws_push(28);
 ws_fetch();
 ws_push(10);
-ws_call(atom("mem_zero"));
+ws_call(mem_zero);
 
 //pushs "starting to interpret"
 //call printsln
@@ -163,7 +171,7 @@ ws_call(atom("mem_zero"));
 // debug_printheap
 #endif
 
-ws_call(atom("interpret"));
+ws_call(interpret);
 
 ws_exit();
 
@@ -176,42 +184,42 @@ ws_exit();
 // parameter
 // return
 // variables
-ws_label(atom("compile_labels"));
+ws_label(compile_labels);
 
 ws_push(24);
 ws_fetch();
 
-ws_label(atom("compile_labels_loop"));
+ws_label(compile_labels_loop);
 
 ws_dup();
 ws_push(25);
 ws_fetch();
 ws_sub();
-ws_jpz(atom("compile_labels_end_pop"));
+ws_jpz(compile_labels_end_pop);
 
 ws_dup();
 ws_fetch();// got the type
 
 ws_dup(); ws_push(8); ws_sub();
-ws_jz(atom("compile_labels_is_label"));
+ws_jz(compile_labels_is_label);
 
 ws_dup(); ws_push(9); ws_sub();
-ws_jz(atom("compile_labels_is_label"));
+ws_jz(compile_labels_is_label);
 
 ws_dup(); ws_push(10); ws_sub();
-ws_jz(atom("compile_labels_is_label"));
+ws_jz(compile_labels_is_label);
 
 ws_dup(); ws_push(11); ws_sub();
-ws_jz(atom("compile_labels_is_label"));
+ws_jz(compile_labels_is_label);
 
 
 ws_drop();
 
 ws_push(2); ws_add();// ++ pointer
 
-ws_jump(atom("compile_labels_loop"));
+ws_jump(compile_labels_loop);
 
-ws_label(atom("compile_labels_is_label"));
+ws_label(compile_labels_is_label);
 ws_drop();
 
 ws_dup();
@@ -220,16 +228,16 @@ ws_push(1); ws_add();
 ws_dup();
 ws_fetch();
 
-ws_call(atom("get_label_ip"));
+ws_call(get_label_ip);
 ws_store();
 
 
 ws_push(2); ws_add();// ++ pointer
 
-ws_jump(atom("compile_labels_loop"));
+ws_jump(compile_labels_loop);
 
 
-ws_label(atom("compile_labels_end_pop"));
+ws_label(compile_labels_end_pop);
 ws_drop();
 
 ws_return();
@@ -246,7 +254,7 @@ ws_return();
 // variable (are saved)
 //  [1] label
 
-ws_label(atom("get_label_ip"));
+ws_label(get_label_ip);
 
 ws_push(1);
 ws_fetch();
@@ -262,27 +270,27 @@ ws_store();
 ws_push(24);
 ws_fetch();
 
-ws_label(atom("get_label_ip_loop"));
+ws_label(get_label_ip_loop);
 ws_dup();
 ws_push(25);
 ws_fetch();
 ws_sub();
-ws_jpz(atom("get_label_ip_end_pop"));
+ws_jpz(get_label_ip_end_pop);
 
 ws_dup();
 ws_fetch();// got the type
 
 ws_dup(); ws_push(7); ws_sub();
-ws_jz(atom("get_label_ip_is_label"));
+ws_jz(get_label_ip_is_label);
 
 
 ws_drop();
 
 ws_push(2); ws_add();// ++ pointer
 
-ws_jump(atom("get_label_ip_loop"));
+ws_jump(get_label_ip_loop);
 
-ws_label(atom("get_label_ip_is_label"));
+ws_label(get_label_ip_is_label);
 ws_drop();
 
 ws_dup();
@@ -291,14 +299,14 @@ ws_fetch();
 ws_push(1);
 ws_fetch();
 ws_sub();
-ws_jz(atom("get_label_ip_found_label"));
+ws_jz(get_label_ip_found_label);
 
 ws_push(2); ws_add();// ++ pointer
-ws_jump(atom("get_label_ip_loop"));
+ws_jump(get_label_ip_loop);
 
 
 
-ws_label(atom("get_label_ip_found_label"));
+ws_label(get_label_ip_found_label);
 ws_swap();
 ws_push(1);
 ws_swap();
@@ -309,15 +317,15 @@ ws_return();
 
 
 
-ws_label(atom("get_label_ip_end_pop"));
+ws_label(get_label_ip_end_pop);
 ws_drop();
 
 ws_pushs("error: label not found: ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_push(1); ws_fetch();
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 
 ws_push(1);
 ws_store();
@@ -339,14 +347,14 @@ ws_exit();
 // parameter
 // [1] new item
 // value
-ws_label(atom("stack_push_back"));
+ws_label(stack_push_back);
 ws_push(27);
 ws_push(27); ws_fetch();//old stack end
 ws_push(1); ws_add();// new stack end
 ws_store();
     // just set new and and let the memory arrange
 
-ws_call(atom("memory_arrange"));
+ws_call(memory_arrange);
 
 ws_push(27); ws_fetch();
 ws_push(1); ws_sub();//ptr to back
@@ -360,14 +368,14 @@ ws_return();
 // parameter
 // [1] new item
 // value
-ws_label(atom("stack_push_front"));
+ws_label(stack_push_front);
 ws_push(26);
 ws_push(26); ws_fetch();//old stack start
 ws_push(1); ws_sub();// new stack start
 ws_store();
     // just set new and and let the memory arrange
 
-ws_call(atom("memory_arrange"));
+ws_call(memory_arrange);
 
 ws_push(26); ws_fetch();
 ws_swap();
@@ -385,11 +393,11 @@ ws_return();
 // parameter
 // return
 // [1] value
-ws_label(atom("stack_pop_back"));
+ws_label(stack_pop_back);
 ws_push(26); ws_fetch();//start of stack
 ws_push(27); ws_fetch();//end of stack
 ws_sub();
-ws_jz(atom("stack_pop_back_error_empty"));
+ws_jz(stack_pop_back_error_empty);
 
 ws_push(27); //end of stack
 ws_fetch();
@@ -413,26 +421,26 @@ ws_push(1);
 ws_sub();
 ws_store();
 
-ws_call(atom("memory_arrange"));
+ws_call(memory_arrange);
 ws_return();
 
 
-ws_label(atom("stack_pop_back_error_empty"));
+ws_label(stack_pop_back_error_empty);
 ws_pushs("error: stack_pop_back and stack empty");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_push(-1);
 ws_return();
 
 // parameter
 // return
 // [1] value
-ws_label(atom("stack_pop_front"));
+ws_label(stack_pop_front);
 ws_push(26); //start of stack
 ws_fetch();
 ws_push(27); //end of stack
 ws_fetch();
 ws_sub();
-ws_jz(atom("stack_pop_front_error_empty"));
+ws_jz(stack_pop_front_error_empty);
 
 ws_push(26); //start of stack
 ws_fetch();// first element
@@ -451,13 +459,13 @@ ws_push(1);
 ws_add();
 ws_store();
 
-ws_call(atom("memory_arrange"));
+ws_call(memory_arrange);
 ws_return();
 
 
-ws_label(atom("stack_pop_front_error_empty"));
+ws_label(stack_pop_front_error_empty);
 ws_pushs("error: stack_pop_front and stack empty");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_push(-1);
 ws_return();
 
@@ -465,9 +473,9 @@ ws_return();
 // makes sure the address is available in heap (resizing it if necessary)
 // parameter
 //  [1] address
-ws_label(atom("heap_extend_to_address"));
+ws_label(heap_extend_to_address);
 ws_dup();
-ws_jn(atom("heap_extend_to_address_done_pop"));//error !! negative address
+ws_jn(heap_extend_to_address_done_pop);//error !! negative address
 
 //      doub
 ws_push(28); ws_fetch();//heap start
@@ -477,7 +485,7 @@ ws_sub();
 ws_push(1); ws_add();
     // add xxx allocate xxx byte additional for seldom realloc
 ws_dup();
-ws_jnz(atom("heap_extend_to_address_done_pop"));
+ws_jnz(heap_extend_to_address_done_pop);
 //    jumpn heap_extend_to_address_done_pop
 //    doub
 //    jumpz heap_extend_to_address_done_pop
@@ -486,7 +494,7 @@ ws_dup();
 ws_push(29);
 ws_fetch();
 ws_swap();
-ws_call(atom("mem_zero"));//zero the new memory
+ws_call(mem_zero);//zero the new memory
 
 ws_dup();
 ws_push(29);
@@ -496,7 +504,7 @@ ws_push(29);
 ws_swap();
 ws_store();//store new memory end
 
-ws_label(atom("heap_extend_to_address_done_pop"));
+ws_label(heap_extend_to_address_done_pop);
 ws_drop();
 ws_return();
 
@@ -506,7 +514,7 @@ ws_return();
 //  [2] address
 //  [1] value
 // return
-ws_label(atom("heap_store"));
+ws_label(heap_store);
 
 
 //    pushs "heap_store addr "
@@ -525,12 +533,12 @@ ws_label(atom("heap_store"));
 
 ws_swap();
 ws_dup();
-ws_jn(atom("heap_store_negative_address"));
+ws_jn(heap_store_negative_address);
 
 ws_dup();
 
 //    debug_printstack
-ws_call(atom("heap_extend_to_address"));
+ws_call(heap_extend_to_address);
 //    debug_printstack
 //    debug_printheap
 
@@ -550,9 +558,9 @@ ws_store();
 
 ws_return();
 
-ws_label(atom("heap_store_negative_address"));
+ws_label(heap_store_negative_address);
 ws_pushs("error: heap store, negative address: ");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_outn();
 ws_drop();
 ws_return();
@@ -562,10 +570,10 @@ ws_return();
 //  [1] address
 // return
 //  [1] value
-ws_label(atom("heap_retrive"));
+ws_label(heap_retrive);
 
 ws_dup();
-ws_jn(atom("heap_retrive_address_negative"));
+ws_jn(heap_retrive_address_negative);
 
 ws_push(28); //heap start
 ws_fetch();
@@ -576,28 +584,28 @@ ws_push(29); //heap end
 ws_fetch();
 ws_swap();
 ws_sub();
-ws_jnz(atom("heap_retrive_address_to_big"));
+ws_jnz(heap_retrive_address_to_big);
 //    debug_printstack
 ws_fetch();
 //    debug_printstack
 
 ws_return();
 
-ws_label(atom("heap_retrive_address_negative"));
+ws_label(heap_retrive_address_negative);
 ws_pushs("error: heap retrive: address negative: ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_push(0);
 ws_return();
 
-ws_label(atom("heap_retrive_address_to_big"));
+ws_label(heap_retrive_address_to_big);
 ws_pushs("error: heap retrive: address too big: ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_push(0);
 ws_return();
 
@@ -621,7 +629,7 @@ ws_return();
 // [5] heap_end
 // [6] heap_length
 
-ws_label(atom("memory_arrange"));
+ws_label(memory_arrange);
 ws_push(1);
 ws_fetch();
 ws_push(2);
@@ -669,7 +677,7 @@ ws_fetch();// code_inst_end
 ws_push(10);
 ws_add();
 ws_sub();
-ws_jn(atom("memory_arrange_set_stack_start"));
+ws_jn(memory_arrange_set_stack_start);
 
 ws_push(25); // code_inst_end
 ws_fetch();
@@ -678,28 +686,28 @@ ws_add();
 ws_push(26); // stack start
 ws_fetch();
 ws_sub();
-ws_jn(atom("memory_arrange_set_stack_start"));
+ws_jn(memory_arrange_set_stack_start);
 
-ws_jump(atom("memory_arrange_old_stack_start"));
+ws_jump(memory_arrange_old_stack_start);
 
-ws_label(atom("memory_arrange_old_stack_start"));
+ws_label(memory_arrange_old_stack_start);
 ws_push(1);
 ws_push(26);
 ws_fetch();
 ws_store();
-ws_jump(atom("memory_arrange_calc_heap"));
+ws_jump(memory_arrange_calc_heap);
 
-ws_label(atom("memory_arrange_set_stack_start"));
+ws_label(memory_arrange_set_stack_start);
 ws_push(1);
 ws_push(25);
 ws_fetch();
 ws_push(20);
 ws_add();
 ws_store();
-ws_jump(atom("memory_arrange_calc_heap"));
+ws_jump(memory_arrange_calc_heap);
 
 
-ws_label(atom("memory_arrange_calc_heap"));
+ws_label(memory_arrange_calc_heap);
 ws_push(2); //end
 ws_push(1);
 ws_fetch();//start
@@ -722,7 +730,7 @@ ws_fetch();// stack_end
 ws_push(10);
 ws_add();
 ws_sub();
-ws_jn(atom("memory_arrange_set_heap_start"));
+ws_jn(memory_arrange_set_heap_start);
 
 ws_push(27); // stack_end
 ws_fetch();
@@ -731,28 +739,28 @@ ws_add();
 ws_push(28); // heap start
 ws_fetch();
 ws_sub();
-ws_jn(atom("memory_arrange_set_heap_start"));
+ws_jn(memory_arrange_set_heap_start);
 
-ws_jump(atom("memory_arrange_old_heap_start"));
+ws_jump(memory_arrange_old_heap_start);
 
-ws_label(atom("memory_arrange_old_heap_start"));
+ws_label(memory_arrange_old_heap_start);
 ws_push(4);
 ws_push(28);
 ws_fetch();
 ws_store();
-ws_jump(atom("memory_arrange_calc_heap_end"));
+ws_jump(memory_arrange_calc_heap_end);
 
-ws_label(atom("memory_arrange_set_heap_start"));
+ws_label(memory_arrange_set_heap_start);
 ws_push(4);
 ws_push(27);
 ws_fetch();
 ws_push(20);
 ws_add();
 ws_store();
-ws_jump(atom("memory_arrange_calc_heap_end"));
+ws_jump(memory_arrange_calc_heap_end);
 
 
-ws_label(atom("memory_arrange_calc_heap_end"));
+ws_label(memory_arrange_calc_heap_end);
 ws_push(5); //end
 ws_push(4);
 ws_fetch();//start
@@ -773,7 +781,7 @@ ws_push(1); // new stack start
 ws_fetch();//dest
 ws_push(3);
 ws_fetch();// length
-ws_call(atom("mem_move"));
+ws_call(mem_move);
 
 // restore [1]-[3]
 ws_push(3); ws_swap(); ws_store();
@@ -803,7 +811,7 @@ ws_push(4); // new stack start
 ws_fetch();//dest
 ws_push(6);
 ws_fetch();// length
-ws_call(atom("mem_move"));
+ws_call(mem_move);
 
 // restore [1]-[3]
 ws_push(3); ws_swap(); ws_store();
@@ -854,7 +862,7 @@ ws_return();
 // [1] inst code pointer
 // [2] inst code
 // [3] data code
-ws_label(atom("interpret"));
+ws_label(interpret);
 ws_push(1);
 ws_push(24);
 ws_fetch();
@@ -862,14 +870,14 @@ ws_store();
 
 //    debug_printheap
 
-ws_label(atom("interpret_start"));
+ws_label(interpret_start);
 
-ws_jump(atom("interpret_next"));
+ws_jump(interpret_next);
 
-ws_label(atom("interpret_next_pop"));
+ws_label(interpret_next_pop);
 ws_drop();
 
-ws_label(atom("interpret_next"));
+ws_label(interpret_next);
 
 //    pushs " "
 //    call printsln
@@ -878,12 +886,12 @@ ws_label(atom("interpret_next"));
 //  outn
 
 ws_push(1); ws_fetch();
-ws_jn(atom("interpret_end"));
+ws_jn(interpret_end);
 
 ws_push(1); ws_fetch();
 ws_push(25); ws_fetch();
 ws_sub();
-ws_jp(atom("interpret_end"));
+ws_jp(interpret_end);
 
 
 ws_push(1);
@@ -910,188 +918,188 @@ ws_store();
 
 
 #ifdef trace_stack
-ws_call(atom("interpreter_debug_printstack"));
+ws_call(interpreter_debug_printstack);
 #endif
 
 #ifdef trace_heap
-ws_call(atom("interpreter_debug_printheap"));
+ws_call(interpreter_debug_printheap);
 #endif
 
 ws_dup(); ws_push(1); ws_sub();
-ws_jz(atom("interpret_push"));
+ws_jz(interpret_push);
 
 ws_dup(); ws_push(2); ws_sub();
-ws_jz(atom("interpret_pop"));
+ws_jz(interpret_pop);
 
 ws_dup(); ws_push(3); ws_sub();
-ws_jz(atom("interpret_doub"));
+ws_jz(interpret_doub);
 
 ws_dup(); ws_push(4); ws_sub();
-ws_jz(atom("interpret_swap"));
+ws_jz(interpret_swap);
 
 ws_dup(); ws_push(5); ws_sub();
-ws_jz(atom("interpret_store"));
+ws_jz(interpret_store);
 
 ws_dup(); ws_push(6); ws_sub();
-ws_jz(atom("interpret_retrive"));
+ws_jz(interpret_retrive);
 
 ws_dup(); ws_push(7); ws_sub();
-ws_jz(atom("interpret_label"));
+ws_jz(interpret_label);
 
 ws_dup(); ws_push(8); ws_sub();
-ws_jz(atom("interpret_call"));
+ws_jz(interpret_call);
 
 ws_dup(); ws_push(9); ws_sub();
-ws_jz(atom("interpret_jump"));
+ws_jz(interpret_jump);
 
 ws_dup(); ws_push(10); ws_sub();
-ws_jz(atom("interpret_jumpz"));
+ws_jz(interpret_jumpz);
 
 ws_dup(); ws_push(11); ws_sub();
-ws_jz(atom("interpret_jumpn"));
+ws_jz(interpret_jumpn);
 
 ws_dup(); ws_push(12); ws_sub();
-ws_jz(atom("interpret_ret"));
+ws_jz(interpret_ret);
 
 ws_dup(); ws_push(13); ws_sub();
-ws_jz(atom("interpret_exit"));
+ws_jz(interpret_exit);
 
 ws_dup(); ws_push(14); ws_sub();
-ws_jz(atom("interpret_add"));
+ws_jz(interpret_add);
 
 ws_dup(); ws_push(15); ws_sub();
-ws_jz(atom("interpret_sub"));
+ws_jz(interpret_sub);
 
 ws_dup(); ws_push(16); ws_sub();
-ws_jz(atom("interpret_mul"));
+ws_jz(interpret_mul);
 
 ws_dup(); ws_push(17); ws_sub();
-ws_jz(atom("interpret_div"));
+ws_jz(interpret_div);
 
 ws_dup(); ws_push(18); ws_sub();
-ws_jz(atom("interpret_mod"));
+ws_jz(interpret_mod);
 
 ws_dup(); ws_push(19); ws_sub();
-ws_jz(atom("interpret_outc"));
+ws_jz(interpret_outc);
 
 ws_dup(); ws_push(20); ws_sub();
-ws_jz(atom("interpret_outn"));
+ws_jz(interpret_outn);
 
 ws_dup(); ws_push(21); ws_sub();
-ws_jz(atom("interpret_inc"));
+ws_jz(interpret_inc);
 
 ws_dup(); ws_push(22); ws_sub();
-ws_jz(atom("interpret_inn"));
+ws_jz(interpret_inn);
 
 ws_dup(); ws_push(23); ws_sub();
-ws_jz(atom("interpret_debugprintstack"));
+ws_jz(interpret_debugprintstack);
 
 ws_dup(); ws_push(24); ws_sub();
-ws_jz(atom("interpret_debugprintheap"));
+ws_jz(interpret_debugprintheap);
 
-ws_jump(atom("interpret_parse_error"));
+ws_jump(interpret_parse_error);
 
-ws_label(atom("interpret_parse_error"));
+ws_label(interpret_parse_error);
     //debug_printstack
 ws_pushs("error: unknown instruction code ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 
-ws_jump(atom("interpret_end"));
+ws_jump(interpret_end);
 
 
 
-ws_label(atom("interpret_push"));
+ws_label(interpret_push);
 ws_push(3); ws_fetch();
 
 #ifdef print_trace
 ws_pushs("push ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_dup();
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_pop"));
+ws_label(interpret_pop);
 #ifdef print_trace
 ws_pushs("pop");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_pop_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_label"));
+ws_label(interpret_label);
 #ifdef print_trace
 ws_pushs("label");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_doub"));
+ws_label(interpret_doub);
 #ifdef print_trace
 ws_pushs("doub");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
 ws_dup();
-ws_call(atom("stack_push_back"));
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_swap"));
+ws_label(interpret_swap);
 #ifdef print_trace
 ws_pushs("swap");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
-ws_call(atom("stack_push_back"));
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_store"));
+ws_label(interpret_store);
 #ifdef print_trace
 ws_pushs("store");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
-ws_call(atom("heap_store"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(heap_store);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_retrive"));
+ws_label(interpret_retrive);
 #ifdef print_trace
 ws_pushs("retrive");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("heap_retrive"));
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_pop_back);
+ws_call(heap_retrive);
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_call"));
+ws_label(interpret_call);
 #ifdef print_trace
 ws_pushs("call");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
 ws_push(1);
 ws_fetch();// next ip to jump over data
-ws_call(atom("stack_push_front"));
+ws_call(stack_push_front);
 
 ws_push(3);
 ws_fetch();
@@ -1100,12 +1108,12 @@ ws_push(1);
 ws_swap();
 ws_store();
 
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_jump"));
+ws_label(interpret_jump);
 #ifdef print_trace
 ws_pushs("jump");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
 ws_push(3);
@@ -1114,206 +1122,206 @@ ws_fetch();
 ws_push(1);
 ws_swap();
 ws_store();
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_jumpz"));
+ws_label(interpret_jumpz);
 #ifdef print_trace
 ws_pushs("jumpz");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_jz(atom("interpret_jump"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_pop_back);
+ws_jz(interpret_jump);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_jumpn"));
+ws_label(interpret_jumpn);
 #ifdef print_trace
 ws_pushs("jumpn");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_jn(atom("interpret_jump"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_pop_back);
+ws_jn(interpret_jump);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_ret"));
+ws_label(interpret_ret);
 #ifdef print_trace
 ws_pushs("ret");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_front"));
+ws_call(stack_pop_front);
 
 ws_push(1);
 ws_swap();
 ws_store();
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_exit"));
+ws_label(interpret_exit);
 #ifdef print_trace
 ws_pushs("exit");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
 ws_exit();
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_add"));
+ws_label(interpret_add);
 #ifdef print_trace
 ws_pushs("add");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
 ws_add();
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_sub"));
+ws_label(interpret_sub);
 #ifdef print_trace
 ws_pushs("sub");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
 ws_sub();
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_mul"));
+ws_label(interpret_mul);
 #ifdef print_trace
 ws_pushs("mul");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
 ws_mul();
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_div"));
+ws_label(interpret_div);
 #ifdef print_trace
 ws_pushs("div");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
 ws_div();
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_mod"));
+ws_label(interpret_mod);
 #ifdef print_trace
 ws_pushs("mod");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
+ws_call(stack_pop_back);
 ws_swap();
 ws_mod();
-ws_call(atom("stack_push_back"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(stack_push_back);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_outc"));
+ws_label(interpret_outc);
 #ifdef print_trace
 ws_pushs("outc");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
 ws_outc();
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_outn"));
+ws_label(interpret_outn);
 #ifdef print_trace
 ws_pushs("outn");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
 ws_outn();
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_inc"));
+ws_label(interpret_inc);
 #ifdef print_trace
 ws_pushs("inc");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
 
 ws_push(8);
 ws_readc();
 ws_push(8); ws_fetch();
 
-ws_call(atom("heap_store"));
+ws_call(heap_store);
 
-ws_jump(atom("interpret_next_pop"));
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_inn"));
+ws_label(interpret_inn);
 #ifdef print_trace
 ws_pushs("inn");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("stack_pop_back"));
+ws_call(stack_pop_back);
 
 ws_push(8);
 ws_readn();
 ws_push(8); ws_fetch();
 
-ws_call(atom("heap_store"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(heap_store);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_debugprintstack"));
+ws_label(interpret_debugprintstack);
 #ifdef print_trace
 ws_pushs("debug_printstack");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("interpreter_debug_printstack"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(interpreter_debug_printstack);
+ws_jump(interpret_next_pop);
 
-ws_label(atom("interpret_debugprintheap"));
+ws_label(interpret_debugprintheap);
 #ifdef print_trace
 ws_pushs("debug_printheap");
-ws_call(atom("printsln"));
+ws_call(printsln);
 #endif
 
-ws_call(atom("interpreter_debug_printheap"));
-ws_jump(atom("interpret_next_pop"));
+ws_call(interpreter_debug_printheap);
+ws_jump(interpret_next_pop);
 
 
 
-ws_label(atom("interpret_end"));
+ws_label(interpret_end);
 ws_return();
 
 
 
 
 
-ws_label(atom("interpreter_debug_printheap"));
+ws_label(interpreter_debug_printheap);
 ws_pushs("Heap: [");
-ws_call(atom("prints"));
+ws_call(prints);
 
 ws_push(28);
 ws_fetch();// heap start
 
-ws_label(atom("interpret_debugprintheap_loop"));
+ws_label(interpret_debugprintheap_loop);
 ws_dup();
 ws_push(29);
 ws_fetch();// heap end
 ws_sub();
-ws_jz(atom("interpret_debugprintheap_loop_end"));
+ws_jz(interpret_debugprintheap_loop_end);
 
     //???
     //    doub
@@ -1324,17 +1332,17 @@ ws_fetch();
 
 ws_outn();
 ws_pushs(",");
-ws_call(atom("prints"));
+ws_call(prints);
 
 ws_push(1); ws_add();
-ws_jump(atom("interpret_debugprintheap_loop"));
+ws_jump(interpret_debugprintheap_loop);
 
-ws_label(atom("interpret_debugprintheap_loop_end"));
+ws_label(interpret_debugprintheap_loop_end);
 
 ws_drop();
 
 ws_pushs("]");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_return();
 
 
@@ -1343,56 +1351,56 @@ ws_return();
 
 
 
-ws_label(atom("interpreter_debug_printstack"));
+ws_label(interpreter_debug_printstack);
 ws_pushs("Stack: [");
-ws_call(atom("prints"));
+ws_call(prints);
 
 ws_push(26);
 ws_fetch();// stack start
 
-ws_label(atom("interpret_debugprintstack_loop"));
+ws_label(interpret_debugprintstack_loop);
 ws_dup();
 ws_push(27);
 ws_fetch();// stack end
 ws_sub();
-ws_jz(atom("interpret_debugprintstack_loop_end"));
+ws_jz(interpret_debugprintstack_loop_end);
 
 ws_dup();
 ws_fetch();
 
 ws_outn();
 ws_pushs(",");
-ws_call(atom("prints"));
+ws_call(prints);
 
 ws_push(1); ws_add();
-ws_jump(atom("interpret_debugprintstack_loop"));
+ws_jump(interpret_debugprintstack_loop);
 
-ws_label(atom("interpret_debugprintstack_loop_end"));
+ws_label(interpret_debugprintstack_loop_end);
 
 ws_drop();
 
 ws_pushs("]");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_return();
 
 
 
 
-ws_label(atom("intro"));
+ws_label(intro);
 ws_pushs("WhiteSpace interpreter written in Whitespace");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_pushs("Made by Oliver Burghard Smarty21@gmx.net");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_pushs("in his free time for your and his joy");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_pushs("good time and join me to get Whitespace ready for business");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_pushs("For any other information dial 1-900-WHITESPACE");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_pushs("Or get soon info at www.WHITESPACE-WANTS-TO-BE-TAKEN-SERIOUS.org");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_pushs("please enter the program and terminate via 3xEnter,'quit',3xEnter");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_return();
 
 
@@ -1413,7 +1421,7 @@ ws_return();
 // [3] start inst code
 // [4] byte code pointer
 // [5] inst code pointer
-ws_label(atom("compile_instruction_code"));
+ws_label(compile_instruction_code);
 
 ws_push(3);
 ws_swap();
@@ -1439,7 +1447,7 @@ ws_fetch();
 ws_store();
 // all local variables set
 
-ws_label(atom("compile_inst_code_loop_restart"));
+ws_label(compile_inst_code_loop_restart);
 
 // p < e - 2
 // p - e + 2 < 0
@@ -1452,16 +1460,16 @@ ws_push(3); // end - 3 because at least 3 chars should be left
 ws_add();
 
 // finished, all data done
-ws_jn(atom("compile_inst_code_continue"));
-ws_jump(atom("compile_inst_code_end"));
+ws_jn(compile_inst_code_continue);
+ws_jump(compile_inst_code_end);
 
 
-ws_label(atom("compile_inst_code_continue"));
+ws_label(compile_inst_code_continue);
 
 ws_push(4);
 ws_fetch();
 
-ws_call(atom("getinst"));
+ws_call(getinst);
 // now we have type, size, value on stack
 
 
@@ -1501,10 +1509,10 @@ ws_push(1);
 ws_add();
 ws_store();
 
-ws_jump(atom("compile_inst_code_loop_restart"));
+ws_jump(compile_inst_code_loop_restart);
 
 
-ws_label(atom("compile_inst_code_end"));
+ws_label(compile_inst_code_end);
 
 // get inst code pointer
 // return it
@@ -1529,7 +1537,7 @@ ws_return();
 // [17] number length (only if has number)
 // [18] address of instruction start
 
-ws_label(atom("getinst"));
+ws_label(getinst);
 ws_push(18);
 ws_swap();
 ws_store();
@@ -1590,7 +1598,7 @@ ws_fetch();
 ws_add();
 // now we have [1]*3+[2]
 ws_dup();
-ws_jz(atom("getinst_push"));
+ws_jz(getinst_push);
 
 ws_push(3);
 ws_mul();
@@ -1600,40 +1608,40 @@ ws_add();
 // now we have [1]*9+[2]*3+[3]
 
 ws_dup(); ws_push(8); ws_sub();
-ws_jz(atom("getinst_pop"));
+ws_jz(getinst_pop);
 
 ws_dup(); ws_push(6); ws_sub();
-ws_jz(atom("getinst_doub"));
+ws_jz(getinst_doub);
 
 ws_dup(); ws_push(7); ws_sub();
-ws_jz(atom("getinst_swap"));
+ws_jz(getinst_swap);
 
 ws_dup(); ws_push(12); ws_sub();
-ws_jz(atom("getinst_store"));
+ws_jz(getinst_store);
 
 ws_dup(); ws_push(13); ws_sub();
-ws_jz(atom("getinst_retrive"));
+ws_jz(getinst_retrive);
 
 ws_dup(); ws_push(18); ws_sub();
-ws_jz(atom("getinst_label"));
+ws_jz(getinst_label);
 
 ws_dup(); ws_push(19); ws_sub();
-ws_jz(atom("getinst_call"));
+ws_jz(getinst_call);
 
 ws_dup(); ws_push(20); ws_sub();
-ws_jz(atom("getinst_jump"));
+ws_jz(getinst_jump);
 
 ws_dup(); ws_push(21); ws_sub();
-ws_jz(atom("getinst_jumpz"));
+ws_jz(getinst_jumpz);
 
 ws_dup(); ws_push(22); ws_sub();
-ws_jz(atom("getinst_jumpn"));
+ws_jz(getinst_jumpn);
 
 ws_dup(); ws_push(23); ws_sub();
-ws_jz(atom("getinst_ret"));
+ws_jz(getinst_ret);
 
 ws_dup(); ws_push(26); ws_sub();
-ws_jz(atom("getinst_exit"));
+ws_jz(getinst_exit);
 
 ws_push(3);
 ws_mul();
@@ -1643,31 +1651,31 @@ ws_add();
 // now we have [1]*27+[2]*9+[3]*3+[4]
 
 ws_dup(); ws_push(27); ws_sub();
-ws_jz(atom("getinst_add"));
+ws_jz(getinst_add);
 
 ws_dup(); ws_push(28); ws_sub();
-ws_jz(atom("getinst_sub"));
+ws_jz(getinst_sub);
 
 ws_dup(); ws_push(29); ws_sub();
-ws_jz(atom("getinst_mul"));
+ws_jz(getinst_mul);
 
 ws_dup(); ws_push(30); ws_sub();
-ws_jz(atom("getinst_div"));
+ws_jz(getinst_div);
 
 ws_dup(); ws_push(31); ws_sub();
-ws_jz(atom("getinst_mod"));
+ws_jz(getinst_mod);
 
 ws_dup(); ws_push(45); ws_sub();
-ws_jz(atom("getinst_outc"));
+ws_jz(getinst_outc);
 
 ws_dup(); ws_push(46); ws_sub();
-ws_jz(atom("getinst_outn"));
+ws_jz(getinst_outn);
 
 ws_dup(); ws_push(48); ws_sub();
-ws_jz(atom("getinst_inc"));
+ws_jz(getinst_inc);
 
 ws_dup(); ws_push(49); ws_sub();
-ws_jz(atom("getinst_inn"));
+ws_jz(getinst_inn);
 
 ws_push(3);
 ws_mul();
@@ -1677,16 +1685,16 @@ ws_add();
 // now we have [1]*81+[2]*27+[3]*9+[4]*3+[5]
 
 ws_dup(); ws_push(216); ws_sub();
-ws_jz(atom("getinst_debug_printstack"));
+ws_jz(getinst_debug_printstack);
 
 ws_dup(); ws_push(217); ws_sub();
-ws_jz(atom("getinst_debug_printheap"));
+ws_jz(getinst_debug_printheap);
 
-ws_jump(atom("getinst_not_known"));
+ws_jump(getinst_not_known);
 
-ws_label(atom("getinst_not_known"));
+ws_label(getinst_not_known);
 ws_pushs("error, type unknown: ");
-ws_call(atom("printsln"));
+ws_call(printsln);
 ws_push(11); ws_fetch();
 ws_outn();
 ws_push(12); ws_fetch();
@@ -1698,10 +1706,10 @@ ws_outn();
 ws_push(15); ws_fetch();
 ws_outn();
 ws_pushs(" ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 // debug_printheap
 // debug_printstack
 
@@ -1710,13 +1718,13 @@ ws_push(100);
 ws_return();
 
 
-ws_label(atom("getinst_push"));
+ws_label(getinst_push);
 ws_drop();
 ws_push(18);
 ws_fetch();//code start
 ws_push(2); // inst length
 ws_add();
-ws_call(atom("scan_number"));
+ws_call(scan_number);
 ws_push(16);
 ws_swap();
 ws_store();
@@ -1734,48 +1742,48 @@ ws_push(2); //inst length
 ws_add();
 ws_return();
 
-ws_label(atom("getinst_pop"));
+ws_label(getinst_pop);
 ws_drop();
 ws_push(0);
 ws_push(2); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_doub"));
+ws_label(getinst_doub);
 ws_drop();
 ws_push(0);
 ws_push(3); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_swap"));
+ws_label(getinst_swap);
 ws_drop();
 ws_push(0);
 ws_push(4); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_store"));
+ws_label(getinst_store);
 ws_drop();
 ws_push(0);
 ws_push(5); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_retrive"));
+ws_label(getinst_retrive);
 ws_drop();
 ws_push(0);
 ws_push(6); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_label"));
+ws_label(getinst_label);
 ws_drop();
 ws_push(18);
 ws_fetch();//code start
 ws_push(3); // inst length
 ws_add();
-ws_call(atom("scan_label"));
+ws_call(scan_label);
 ws_push(16);
 ws_swap();
 ws_store();
@@ -1793,13 +1801,13 @@ ws_push(3); //inst length
 ws_add();
 ws_return();
 
-ws_label(atom("getinst_call"));
+ws_label(getinst_call);
 ws_drop();
 ws_push(18);
 ws_fetch();//code start
 ws_push(3); // inst length
 ws_add();
-ws_call(atom("scan_label"));
+ws_call(scan_label);
 ws_push(16);
 ws_swap();
 ws_store();
@@ -1817,13 +1825,13 @@ ws_push(3); //inst length
 ws_add();
 ws_return();
 
-ws_label(atom("getinst_jump"));
+ws_label(getinst_jump);
 ws_drop();
 ws_push(18);
 ws_fetch();//code start
 ws_push(3); // inst length
 ws_add();
-ws_call(atom("scan_label"));
+ws_call(scan_label);
 ws_push(16);
 ws_swap();
 ws_store();
@@ -1841,13 +1849,13 @@ ws_push(3); //inst length
 ws_add();
 ws_return();
 
-ws_label(atom("getinst_jumpz"));
+ws_label(getinst_jumpz);
 ws_drop();
 ws_push(18);
 ws_fetch();//code start
 ws_push(3); // inst length
 ws_add();
-ws_call(atom("scan_label"));
+ws_call(scan_label);
 ws_push(16);
 ws_swap();
 ws_store();
@@ -1865,13 +1873,13 @@ ws_push(3); //inst length
 ws_add();
 ws_return();
 
-ws_label(atom("getinst_jumpn"));
+ws_label(getinst_jumpn);
 ws_drop();
 ws_push(18);
 ws_fetch();//code start
 ws_push(3); // inst length
 ws_add();
-ws_call(atom("scan_label"));
+ws_call(scan_label);
 ws_push(16);
 ws_swap();
 ws_store();
@@ -1889,91 +1897,91 @@ ws_push(3); //inst length
 ws_add();
 ws_return();
 
-ws_label(atom("getinst_ret"));
+ws_label(getinst_ret);
 ws_drop();
 ws_push(0);
 ws_push(12); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_exit"));
+ws_label(getinst_exit);
 ws_drop();
 ws_push(0);
 ws_push(13); //inst number
 ws_push(3);
 ws_return();
 
-ws_label(atom("getinst_add"));
+ws_label(getinst_add);
 ws_drop();
 ws_push(0);
 ws_push(14); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_sub"));
+ws_label(getinst_sub);
 ws_drop();
 ws_push(0);
 ws_push(15); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_mul"));
+ws_label(getinst_mul);
 ws_drop();
 ws_push(0);
 ws_push(16); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_div"));
+ws_label(getinst_div);
 ws_drop();
 ws_push(0);
 ws_push(17); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_mod"));
+ws_label(getinst_mod);
 ws_drop();
 ws_push(0);
 ws_push(18); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_outc"));
+ws_label(getinst_outc);
 ws_drop();
 ws_push(0);
 ws_push(19); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_outn"));
+ws_label(getinst_outn);
 ws_drop();
 ws_push(0);
 ws_push(20); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_inc"));
+ws_label(getinst_inc);
 ws_drop();
 ws_push(0);
 ws_push(21); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_inn"));
+ws_label(getinst_inn);
 ws_drop();
 ws_push(0);
 ws_push(22); //inst number
 ws_push(4);
 ws_return();
 
-ws_label(atom("getinst_debug_printstack"));
+ws_label(getinst_debug_printstack);
 ws_drop();
 ws_push(0);
 ws_push(23); //inst number
 ws_push(5);
 ws_return();
 
-ws_label(atom("getinst_debug_printheap"));
+ws_label(getinst_debug_printheap);
 ws_drop();
 ws_push(0);
 ws_push(24); //inst number
@@ -2031,7 +2039,7 @@ ws_return();
 // [42] sign
 // [43] actual pointer
 
-ws_label(atom("scan_number"));
+ws_label(scan_number);
 ws_push(42);
 ws_push(1);
 ws_store();
@@ -2056,45 +2064,45 @@ ws_fetch();
     // got the char
 
 ws_dup();
-ws_jz(atom("scan_number_positive_pop"));
+ws_jz(scan_number_positive_pop);
 
 ws_dup();
 ws_push(1);
 ws_sub();
-ws_jz(atom("scan_number_negative_pop"));
+ws_jz(scan_number_negative_pop);
 
 ws_dup();
 ws_push(2);
 ws_sub();
-ws_jz(atom("scan_number_no_sign_pop_next"));//maybe error, number without sign
+ws_jz(scan_number_no_sign_pop_next);//maybe error, number without sign
 
-ws_jump(atom("scan_number_finished_error"));
+ws_jump(scan_number_finished_error);
 
-ws_label(atom("scan_number_finished_error"));
+ws_label(scan_number_finished_error);
 ws_pushs("error: unknown type (0-2): ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 // debug_printheap
 // debug_printstack
-ws_jump(atom("scan_number_finished"));
+ws_jump(scan_number_finished);
 
-ws_label(atom("scan_number_positive_pop"));
+ws_label(scan_number_positive_pop);
 ws_drop();
 ws_push(42);
 ws_push(1);
 ws_store();
-ws_jump(atom("scan_number_scan_digits"));
+ws_jump(scan_number_scan_digits);
 
-ws_label(atom("scan_number_negative_pop"));
+ws_label(scan_number_negative_pop);
 ws_drop();
 ws_push(42);
 ws_push(-1);
 ws_store();
-ws_jump(atom("scan_number_scan_digits"));
+ws_jump(scan_number_scan_digits);
 
-ws_label(atom("scan_number_scan_digits"));
+ws_label(scan_number_scan_digits);
 ws_push(43);
 ws_fetch();
 ws_push(1);
@@ -2110,21 +2118,21 @@ ws_fetch();
     // got the char
 
 ws_dup();
-ws_jz(atom("scan_number_digit_0_pop"));
+ws_jz(scan_number_digit_0_pop);
 
 ws_dup();
 ws_push(1);
 ws_sub();
-ws_jz(atom("scan_number_digit_1_pop"));
+ws_jz(scan_number_digit_1_pop);
 
 ws_dup();
 ws_push(2);
 ws_sub();
-ws_jz(atom("scan_number_finished_pop_next"));
+ws_jz(scan_number_finished_pop_next);
 
-ws_jump(atom("scan_number_finished_error"));
+ws_jump(scan_number_finished_error);
 
-ws_label(atom("scan_number_digit_0_pop"));
+ws_label(scan_number_digit_0_pop);
 ws_drop();
 ws_push(41);
 ws_push(41);
@@ -2134,9 +2142,9 @@ ws_mul();
 ws_push(0);
 ws_add();
 ws_store();
-ws_jump(atom("scan_number_scan_digits"));
+ws_jump(scan_number_scan_digits);
 
-ws_label(atom("scan_number_digit_1_pop"));
+ws_label(scan_number_digit_1_pop);
 ws_drop();
 ws_push(41);
 ws_push(41);
@@ -2146,15 +2154,15 @@ ws_mul();
 ws_push(1);
 ws_add();
 ws_store();
-ws_jump(atom("scan_number_scan_digits"));
+ws_jump(scan_number_scan_digits);
 
-ws_label(atom("scan_number_no_sign_pop_next"));
+ws_label(scan_number_no_sign_pop_next);
 ws_pushs("warning: number without a sign");
-ws_call(atom("printsln"));
+ws_call(printsln);
 
-ws_jump(atom("scan_number_finished_pop_next"));
+ws_jump(scan_number_finished_pop_next);
 
-ws_label(atom("scan_number_finished_pop_next"));
+ws_label(scan_number_finished_pop_next);
 ws_drop();
 
 ws_push(43);
@@ -2165,7 +2173,7 @@ ws_push(43);
 ws_swap();
 ws_store();
     // pointer to next char
-ws_label(atom("scan_number_finished"));
+ws_label(scan_number_finished);
 
 ws_push(43);
 ws_fetch();
@@ -2199,7 +2207,7 @@ ws_return();
 // [41] number
 // [43] actual pointer
 
-ws_label(atom("scan_label"));
+ws_label(scan_label);
 ws_push(41);
 ws_push(1);
 ws_store();
@@ -2213,7 +2221,7 @@ ws_push(40);
 ws_fetch();
 ws_store();
 
-ws_label(atom("scan_label_scan_digits"));
+ws_label(scan_label_scan_digits);
 ws_push(43);
 ws_fetch();
 ws_fetch();
@@ -2229,31 +2237,31 @@ ws_store();
     // pointer to next char
 
 ws_dup();
-ws_jz(atom("scan_label_digit_0_pop"));
+ws_jz(scan_label_digit_0_pop);
 
 ws_dup();
 ws_push(1);
 ws_sub();
-ws_jz(atom("scan_label_digit_1_pop"));
+ws_jz(scan_label_digit_1_pop);
 
 ws_dup();
 ws_push(2);
 ws_sub();
-ws_jz(atom("scan_label_finished_pop"));
+ws_jz(scan_label_finished_pop);
 
-ws_jump(atom("scan_label_finished_error"));
+ws_jump(scan_label_finished_error);
 
-ws_label(atom("scan_label_finished_error"));
+ws_label(scan_label_finished_error);
 ws_pushs("error: unknown type (0-2): ");
-ws_call(atom("prints"));
+ws_call(prints);
 ws_outn();
 ws_push(0);
-ws_call(atom("printsln"));
+ws_call(printsln);
 // debug_printheap
 // debug_printstack
-ws_jump(atom("scan_label_finished"));
+ws_jump(scan_label_finished);
 
-ws_label(atom("scan_label_digit_0_pop"));
+ws_label(scan_label_digit_0_pop);
 ws_drop();
 ws_push(41);
 ws_push(41);
@@ -2263,9 +2271,9 @@ ws_mul();
 ws_push(0);
 ws_add();
 ws_store();
-ws_jump(atom("scan_label_scan_digits"));
+ws_jump(scan_label_scan_digits);
 
-ws_label(atom("scan_label_digit_1_pop"));
+ws_label(scan_label_digit_1_pop);
 ws_drop();
 ws_push(41);
 ws_push(41);
@@ -2275,12 +2283,12 @@ ws_mul();
 ws_push(1);
 ws_add();
 ws_store();
-ws_jump(atom("scan_label_scan_digits"));
+ws_jump(scan_label_scan_digits);
 
-ws_label(atom("scan_label_finished_pop"));
+ws_label(scan_label_finished_pop);
 ws_drop();
 
-ws_label(atom("scan_label_finished"));
+ws_label(scan_label_finished);
 
 ws_push(43);
 ws_fetch();
@@ -2326,7 +2334,7 @@ ws_return();
 // [5] compiled code pointer
 // //stack:
 // //instruction pointer
-ws_label(atom("compile_byte_code"));
+ws_label(compile_byte_code);
 
 ws_push(3);
 ws_swap();
@@ -2359,13 +2367,13 @@ ws_store();
 
 // main loop
 
-ws_jump(atom("compile_byte_code_loop_restart"));
+ws_jump(compile_byte_code_loop_restart);
 
-ws_label(atom("compile_byte_code_loop_restart_pop"));
+ws_label(compile_byte_code_loop_restart_pop);
 ws_drop();
 
 
-ws_label(atom("compile_byte_code_loop_restart"));
+ws_label(compile_byte_code_loop_restart);
 ws_push(4);
 ws_fetch();
 ws_push(2);
@@ -2373,12 +2381,12 @@ ws_fetch();
 ws_sub();
 
 // finished, all data done
-ws_jpz(atom("compile_byte_code_finished"));
+ws_jpz(compile_byte_code_finished);
 
 ws_push(4);
 ws_fetch();
 ws_fetch();
-ws_call(atom("gettype"));
+ws_call(gettype);
 ws_dup();
 
 //increment code pointer
@@ -2389,7 +2397,7 @@ ws_push(1);
 ws_add();
 ws_store();
 
-ws_jn(atom("compile_byte_code_loop_restart_pop"));
+ws_jn(compile_byte_code_loop_restart_pop);
 
 ws_push(5);
 ws_fetch();
@@ -2404,11 +2412,11 @@ ws_push(1);
 ws_add();
 ws_store();
 
-ws_jump(atom("compile_byte_code_loop_restart"));
+ws_jump(compile_byte_code_loop_restart);
 
 
 
-ws_label(atom("compile_byte_code_finished"));
+ws_label(compile_byte_code_finished);
 
 // compiled code pointer
 ws_push(5);
@@ -2424,7 +2432,7 @@ ws_return();
 
 
 
-ws_label(atom("gettype"));
+ws_label(gettype);
 // parameter
 // 1: char
 // retrun
@@ -2432,38 +2440,38 @@ ws_label(atom("gettype"));
 
 ws_dup(); ws_push(32); ws_sub();//space
 //test 97  ;'a'
-ws_jz(atom("gettype_space"));
+ws_jz(gettype_space);
 
 ws_dup(); ws_push(9); ws_sub();//tab
 //test 98  ;'b'
-ws_jz(atom("gettype_tab"));
+ws_jz(gettype_tab);
 
 ws_dup(); ws_push(10); ws_sub();//return
 //test 99    ;'c'
-ws_jz(atom("gettype_return"));
+ws_jz(gettype_return);
 
 
 ws_drop();
 ws_push(-1);
-ws_jump(atom("gettype_ret"));
+ws_jump(gettype_ret);
 
 
-ws_label(atom("gettype_space"));
+ws_label(gettype_space);
 ws_drop();
 ws_push(0);
-ws_jump(atom("gettype_ret"));
+ws_jump(gettype_ret);
 
-ws_label(atom("gettype_tab"));
+ws_label(gettype_tab);
 ws_drop();
 ws_push(1);
-ws_jump(atom("gettype_ret"));
+ws_jump(gettype_ret);
 
-ws_label(atom("gettype_return"));
+ws_label(gettype_return);
 ws_drop();
 ws_push(2);
-ws_jump(atom("gettype_ret"));
+ws_jump(gettype_ret);
 
-ws_label(atom("gettype_ret"));
+ws_label(gettype_ret);
 ws_return();
 
 
@@ -2481,25 +2489,25 @@ ws_return();
 // var 3: last char
 
 
-ws_label(atom("read_program"));
+ws_label(read_program);
 
 // param 1 to [2]
 ws_push(2);
 ws_swap();
 ws_store();
 
-ws_label(atom("read_start_reset"));
+ws_label(read_start_reset);
 
 ws_push(1);
 ws_push(0);
 ws_store();
 
-ws_jump(atom("read_start_noreset"));
+ws_jump(read_start_noreset);
 
-ws_label(atom("read_start_noreset_pop"));
+ws_label(read_start_noreset_pop);
 ws_drop();
 
-ws_label(atom("read_start_noreset"));
+ws_label(read_start_noreset);
 
 
 ws_push(2);
@@ -2528,118 +2536,118 @@ ws_store();
 
 ws_push(1); ws_fetch();
 ws_dup(); ws_push(0); ws_sub();
-ws_jz(atom("onPos0_pop"));
+ws_jz(onPos0_pop);
 
 ws_dup(); ws_push(1); ws_sub();
-ws_jz(atom("onPos1_pop"));
+ws_jz(onPos1_pop);
 
 ws_dup(); ws_push(2); ws_sub();
-ws_jz(atom("onPos2_pop"));
+ws_jz(onPos2_pop);
 
 ws_dup(); ws_push(3); ws_sub();
-ws_jz(atom("onPos3_pop"));
+ws_jz(onPos3_pop);
 
 ws_dup(); ws_push(4); ws_sub();
-ws_jz(atom("onPos4_pop"));
+ws_jz(onPos4_pop);
 
 ws_dup(); ws_push(5); ws_sub();
-ws_jz(atom("onPos5_pop"));
+ws_jz(onPos5_pop);
 
 ws_dup(); ws_push(6); ws_sub();
-ws_jz(atom("onPos6_pop"));
+ws_jz(onPos6_pop);
 
 ws_dup(); ws_push(7); ws_sub();
-ws_jz(atom("onPos7_pop"));
+ws_jz(onPos7_pop);
 
 ws_dup(); ws_push(8); ws_sub();
-ws_jz(atom("onPos8_pop"));
+ws_jz(onPos8_pop);
 
-ws_jump(atom("onPos9_pop"));
-
-
+ws_jump(onPos9_pop);
 
 
-ws_label(atom("onPos0_pop"));
-ws_label(atom("onPos1_pop"));
-ws_label(atom("onPos2_pop"));
-ws_label(atom("onPos7_pop"));
-ws_label(atom("onPos8_pop"));
-ws_label(atom("onPos9_pop"));
+
+
+ws_label(onPos0_pop);
+ws_label(onPos1_pop);
+ws_label(onPos2_pop);
+ws_label(onPos7_pop);
+ws_label(onPos8_pop);
+ws_label(onPos9_pop);
 ws_drop();
 
 ws_push(3); ws_fetch();
 
 ws_dup(); ws_push(13); ws_sub();
-ws_jz(atom("read_start_noreset_pop"));
+ws_jz(read_start_noreset_pop);
 
 ws_dup(); ws_push(10); ws_sub();
-ws_jz(atom("read_onNext_pop"));
+ws_jz(read_onNext_pop);
 
 ws_drop();
 
-ws_jump(atom("read_start_reset"));
+ws_jump(read_start_reset);
 
 
 
-ws_label(atom("onPos3_pop"));
+ws_label(onPos3_pop);
 ws_drop();
 
 ws_push(3); ws_fetch();
 ws_dup(); ws_push(10); ws_sub();// enter
-ws_jz(atom("read_start_noreset_pop"));
+ws_jz(read_start_noreset_pop);
 
 ws_dup(); ws_push(13); ws_sub();// enter
-ws_jz(atom("read_start_noreset_pop"));
+ws_jz(read_start_noreset_pop);
 
 ws_dup(); ws_push(113); ws_sub();// 'q'
-ws_jz(atom("read_onNext_pop"));
+ws_jz(read_onNext_pop);
 ws_drop();
-ws_jump(atom("read_start_reset"));
+ws_jump(read_start_reset);
 
 
-ws_label(atom("onPos4_pop"));
+ws_label(onPos4_pop);
 ws_drop();
 
 ws_push(3); ws_fetch();
 ws_dup(); ws_push(117); ws_sub();// 'u'
-ws_jz(atom("read_onNext_pop"));
+ws_jz(read_onNext_pop);
 ws_drop();
-ws_jump(atom("read_start_reset"));
+ws_jump(read_start_reset);
 
 
-ws_label(atom("onPos5_pop"));
+ws_label(onPos5_pop);
 ws_drop();
 
 ws_push(3); ws_fetch();
 ws_dup(); ws_push(105); ws_sub();// 'i'
-ws_jz(atom("read_onNext_pop"));
+ws_jz(read_onNext_pop);
 ws_drop();
-ws_jump(atom("read_start_reset"));
+ws_jump(read_start_reset);
 
 
-ws_label(atom("onPos6_pop"));
+ws_label(onPos6_pop);
 ws_drop();
 
 ws_push(3); ws_fetch();
 ws_dup(); ws_push(116); ws_sub();// 't'
-ws_jz(atom("read_onNext_pop"));
+ws_jz(read_onNext_pop);
 ws_drop();
-ws_jump(atom("read_start_reset"));
+ws_jump(read_start_reset);
 
 
-ws_label(atom("read_onNext_pop"));
+ws_label(read_onNext_pop);
 ws_push(1); ws_fetch();
 ws_push(1); ws_add();
 ws_push(1); ws_swap(); ws_store();
 
 ws_push(1); ws_fetch();
 ws_push(10); ws_sub();
-ws_jz(atom("read_end"));
+ws_jz(read_end);
 
-ws_jump(atom("read_start_noreset"));
+ws_jump(read_start_noreset);
 
 
-ws_label(atom("read_end"));
+ws_label(read_end);
 ws_push(2);
 ws_fetch();
 
@@ -2656,17 +2664,17 @@ ws_push(3);
 ws_fetch();
 ws_push(10);
 ws_sub();
-ws_jz(atom("onReturn"));
+ws_jz(onReturn);
 //pop
 
 //equal to 13
 
-ws_jump(atom("read_start_reset"));
+ws_jump(read_start_reset);
 
 
 
 
-ws_label(atom("onReturn"));
+ws_label(onReturn);
 ws_push(1);
 
 ws_push(1);
@@ -2685,7 +2693,7 @@ ws_fetch();
 ws_push(6);
 ws_sub();
 
-ws_jn(atom("read_start_noreset"));
+ws_jn(read_start_noreset);
 
-
+// print_atom_list();
 }

@@ -9,9 +9,9 @@
 // 1: source pointer
 // 2: dest pointer
 // 3: left count
-ws_label(atom("memcopy"));
-ws_label(atom("mem_copy"));
-ws_label(atom("mem_move"));
+ws_label(memcopy);
+ws_label(mem_copy);
+ws_label(mem_move);
 
 ws_push(3);
 ws_swap();
@@ -30,23 +30,23 @@ ws_store();
 
 
 ws_push(3); ws_fetch();
-ws_jnz(atom("memcopy_end"));//no more left
+ws_jnz(memcopy_end);//no more left
 
 ws_push(1); ws_fetch();
 ws_push(2); ws_fetch();
 ws_sub();
 
-ws_jz(atom("memcopy_end"));//source = dest
+ws_jz(memcopy_end);//source = dest
 
 ws_push(1); ws_fetch();
 ws_push(2); ws_fetch();
 ws_sub();
 
-ws_jn(atom("memcopy_loop_dest_greater_source_begin"));
-ws_jump(atom("memcopy_loop_source_greater_dest"));
+ws_jn(memcopy_loop_dest_greater_source_begin);
+ws_jump(memcopy_loop_source_greater_dest);
 
 
-ws_label(atom("memcopy_loop_source_greater_dest"));
+ws_label(memcopy_loop_source_greater_dest);
 ws_push(2);
 ws_fetch();
 ws_push(1);
@@ -77,12 +77,12 @@ ws_store();
 
 ws_push(3); ws_fetch();
 
-ws_jz(atom("memcopy_end"));
-ws_jump(atom("memcopy_loop_source_greater_dest"));
+ws_jz(memcopy_end);
+ws_jump(memcopy_loop_source_greater_dest);
 
 
 
-ws_label(atom("memcopy_loop_dest_greater_source_begin"));
+ws_label(memcopy_loop_dest_greater_source_begin);
 // dest > source so we need to go backwards throug the memory
 ws_push(2);
 ws_push(2);
@@ -104,7 +104,7 @@ ws_push(1);
 ws_sub();
 ws_store();
 
-ws_label(atom("memcopy_loop_dest_greater_source"));
+ws_label(memcopy_loop_dest_greater_source);
 ws_push(2);
 ws_fetch();
 ws_push(1);
@@ -135,11 +135,11 @@ ws_store();
 
 ws_push(3); ws_fetch();
 
-ws_jz(atom("memcopy_end"));
-ws_jump(atom("memcopy_loop_dest_greater_source"));
+ws_jz(memcopy_end);
+ws_jump(memcopy_loop_dest_greater_source);
 
 
-ws_label(atom("memcopy_end"));
+ws_label(memcopy_end);
 
 ws_return();
 
@@ -153,12 +153,12 @@ ws_return();
 // [1] from
 // [2] count
 
-ws_label(atom("mem_zero"));
+ws_label(mem_zero);
 
-ws_label(atom("mem_zero_start"));
+ws_label(mem_zero_start);
 //from->count
 ws_dup();
-ws_jz(atom("mem_zero_end"));
+ws_jz(mem_zero_end);
 
 ws_swap();//count->from
 
@@ -173,9 +173,9 @@ ws_swap();//from->count
 
 ws_push(1);
 ws_sub();
-ws_jump(atom("mem_zero_start"));
+ws_jump(mem_zero_start);
 
-ws_label(atom("mem_zero_end"));
+ws_label(mem_zero_end);
 ws_drop();
 ws_drop();
 ws_return();
@@ -195,7 +195,7 @@ ws_return();
 
 
 // nummeriere speicher von [1] - [2] // for debuging
-ws_label(atom("numeriere"));
+ws_label(numeriere);
 ws_push(2);
 ws_swap();
 ws_store();
@@ -207,7 +207,7 @@ ws_store();
 ws_push(1);
 ws_fetch();
 
-ws_label(atom("numeriere_start"));
+ws_label(numeriere_start);
 
 ws_dup();
 ws_dup();
@@ -222,11 +222,11 @@ ws_push(2);
 ws_fetch();
 ws_sub();
 
-ws_jz(atom("numeriere_end"));
+ws_jz(numeriere_end);
 
-ws_jump(atom("numeriere_start"));
+ws_jump(numeriere_start);
 
-ws_label(atom("numeriere_end"));
+ws_label(numeriere_end);
 ws_drop();
 ws_return();
 
