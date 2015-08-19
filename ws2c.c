@@ -41,6 +41,7 @@ char * header;
 int main(int argc, char ** argv)
 {
     printf("%s\n\n", header);
+    if (argc <= 1) yyin = stdin;
 
     do
     {
@@ -85,20 +86,20 @@ process_command()
 	if (yytext[1] == ' ') {
 	    if (yytext[2] != '\n') {
 		append_label();
-		printf("ws_push(%"PRIdcell");\t/* %s */\n", cv_number(yytext+2), cv_chr(yytext));
+		printf("ws_push(%"PRIdcell");", cv_number(yytext+2));
 	    } else
 		printf("ws_%s();\n", cv_chr(yytext));
 	}
 	if (yytext[1] == '\n') {
-	    if (yytext[2] == ' ') printf("ws_dup();\t/* %s */\n", cv_chr(yytext));
-	    if (yytext[2] == '\n') printf("ws_drop();\t/* %s */\n", cv_chr(yytext));
-	    if (yytext[2] == '\t') printf("ws_swap();\t/* %s */\n", cv_chr(yytext));
+	    if (yytext[2] == ' ') printf("ws_dup();");
+	    if (yytext[2] == '\n') printf("ws_drop();");
+	    if (yytext[2] == '\t') printf("ws_swap();");
 	}
 	if (yytext[1] == '\t') {
 	    if (yytext[2] != '\t') {
 		append_label();
-		if (yytext[2] == ' ') printf("ws_pick(%"PRIdcell");\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
-		if (yytext[2] == '\n') printf("ws_slide(%"PRIdcell");\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
+		if (yytext[2] == ' ') printf("ws_pick(%"PRIdcell");", cv_number(yytext+3));
+		if (yytext[2] == '\n') printf("ws_slide(%"PRIdcell");", cv_number(yytext+3));
 	    } else
 		printf("ws_%s();\n", cv_chr(yytext));
 	}
@@ -107,23 +108,23 @@ process_command()
     if (yytext[0] == '\n') {
 	if (yytext[1] == ' ') {
 	    append_label();
-	    if (yytext[2] == ' ') printf("ws_label(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-	    if (yytext[2] == '\n') printf("ws_jump(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-	    if (yytext[2] == '\t') printf("ws_call(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+	    if (yytext[2] == ' ') printf("ws_label(%s);", cv_label(yytext+3));
+	    if (yytext[2] == '\n') printf("ws_jump(%s);", cv_label(yytext+3));
+	    if (yytext[2] == '\t') printf("ws_call(%s);", cv_label(yytext+3));
 	}
 	if (yytext[1] == '\n') {
 	    if (yytext[2] == '\n')
-		printf("ws_exit();\t/* %s */\n", cv_chr(yytext));
+		printf("ws_exit();");
 	    else
 		printf("ws_%s();\n", cv_chr(yytext));
 	}
 	if (yytext[1] == '\t') {
 	    if (yytext[2] != '\n') {
 		append_label();
-		if (yytext[2] == ' ') printf("ws_jz(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-		if (yytext[2] == '\t') printf("ws_jn(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+		if (yytext[2] == ' ') printf("ws_jz(%s);", cv_label(yytext+3));
+		if (yytext[2] == '\t') printf("ws_jn(%s);", cv_label(yytext+3));
 	    } else
-		printf("ws_ret();\t/* %s */\n", cv_chr(yytext));
+		printf("ws_ret();");
 	}
     }
 
@@ -134,14 +135,14 @@ process_command()
 	    else {
 		append_char();
 		if (yytext[2] == ' ') {
-		    if (yytext[3] == ' ') printf("ws_add();\t/* %s */\n", cv_chr(yytext));
-		    if (yytext[3] == '\n') printf("ws_mul();\t/* %s */\n", cv_chr(yytext));
-		    if (yytext[3] == '\t') printf("ws_sub();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == ' ') printf("ws_add();");
+		    if (yytext[3] == '\n') printf("ws_mul();");
+		    if (yytext[3] == '\t') printf("ws_sub();");
 		}
 		if (yytext[2] == '\t') {
-		    if (yytext[3] == ' ') printf("ws_div();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == ' ') printf("ws_div();");
 		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
-		    if (yytext[3] == '\t') printf("ws_mod();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_mod();");
 		}
 	    }
 	}
@@ -151,24 +152,25 @@ process_command()
 	    else {
 		append_char();
 		if (yytext[2] == ' ') {
-		    if (yytext[3] == ' ') printf("ws_outc();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == ' ') printf("ws_outc();");
 		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
-		    if (yytext[3] == '\t') printf("ws_outn();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_outn();");
 		}
 		if (yytext[2] == '\t') {
-		    if (yytext[3] == ' ') printf("ws_readc();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == ' ') printf("ws_readc();");
 		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
-		    if (yytext[3] == '\t') printf("ws_readn();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_readn();");
 		}
 	    }
 	}
 	if (yytext[1] == '\t') {
-	    if (yytext[2] == ' ') printf("ws_store();\t/* %s */\n", cv_chr(yytext));
+	    if (yytext[2] == ' ') printf("ws_store();");
 	    if (yytext[2] == '\n') printf("ws_%s();\n", cv_chr(yytext));
-	    if (yytext[2] == '\t') printf("ws_fetch();\t/* %s */\n", cv_chr(yytext));
+	    if (yytext[2] == '\t') printf("ws_fetch();");
 	}
     }
 
+    printf("\t/* %s */\n", cv_chr(yytext));
 }
 
 void
@@ -218,9 +220,10 @@ cv_number(char * ws_num)
     int negative = (*ws_num++ != ' ');
     cell_t value = 0;
 
-    if (strlen(ws_num) > sizeof(cell_t) * 8) {
-	fprintf(stderr, "WARNING: Literal constant too large: '..%s'\n", cv_chr(ws_num));
-    }
+    if (strlen(ws_num) > sizeof(cell_t) * 8)
+	fprintf(stderr, "WARNING: Literal constant too large: '%s'\n", cv_chr(ws_num));
+    if (*ws_num == '\n')
+	fprintf(stderr, "WARNING: Literal constant is empty: '%s'\n", cv_chr(ws_num));
 
     while(*ws_num != '\n') {
 	value *= 2;
@@ -235,31 +238,26 @@ cv_number(char * ws_num)
 char * cv_label(char * ws_label)
 {
     char * s;
-    int l = -1;
+    int l;
     static char * sbuf = 0;
     static int maxlen = 0;
 
-    for (s = ws_label; *s; s++) switch(*s)
-    {
-	case ' ': *s = '0'; break;
-	case '\t': *s = '1'; break;
-	case '\n': *s = '\0'; l = s-ws_label; break;
-	default: *s = '*'; break;
-    }
-    if (l<0) return ws_label;	/* !? */
-    if (l == 0) return "0x0";	/* An empty string is dubious. */
-
-    if (l > maxlen) {
+    if ((l=strlen(ws_label)) > maxlen) {
 	if(sbuf) free(sbuf);
 	sbuf = malloc(l+8);
 	maxlen = l;
     }
 
-    if (ws_label[0] == '0' && l%8 == 0 && l > 8) {
+    if (*ws_label == '\0' || *ws_label == '\n')
+	return "0x0";	/* Never return an empty string. */
+
+    l--;
+
+    if (ws_label[0] == ' ' && l%8 == 0 && l > 8) {
 	int i = 0, j = 0, n = 0;
-	for(s=ws_label; *s; s++) {
+	for(s=ws_label; *s && *s != '\n'; s++) {
 	    i *= 2;
-	    if (*s == '1')
+	    if (*s != ' ')
 		i ++;
 	    if (++j == 8) {
 		if (i>=48 && i<=57 && n != 0) {
@@ -273,24 +271,34 @@ char * cv_label(char * ws_label)
 		i = j = 0;
 	    }
 	}
-	if (n) {
+	if (n && *s && !s[1]) {
 	    sbuf[n] = 0;
 	    return sbuf;
 	}
     }
 
-    if (ws_label[0] == '1' && l < 31) {
+    if (ws_label[0] != ' ' && l < 31) {
 	int i = 0;
-	for(s=ws_label; *s; s++) {
+	for(s=ws_label; *s && *s != '\n'; s++) {
 	    i *=2;
-	    if (*s == '1')
+	    if (*s != ' ')
 		i ++;
 	}
-	sprintf(sbuf, "%d", i);
-	return sbuf;
+	if (*s && !s[1]) {
+	    sprintf(sbuf, "%d", i);
+	    return sbuf;
+	}
     }
 
-    return ws_label;
+    for (l=0; ws_label[l]; l++) switch(ws_label[l])
+    {
+	case ' ': sbuf[l] = '0'; break;
+	case '\t': sbuf[l] = '1'; break;
+	case '\n': sbuf[l] = '\0'; break;
+	default: sbuf[l] = 'X'; break;
+    }
+    sbuf[l] = 0;
+    return sbuf;
 }
 
 char * cv_chr(char * ws_code)
@@ -311,6 +319,7 @@ char * cv_chr(char * ws_code)
 	case '\t': sbuf[i] = 't'; break;
 	case '\n': sbuf[i] = 'l'; break;
 	default: sbuf[i] = '*'; break;
+	case '0': case '1': sbuf[i] = ws_code[i]; break;
     }
     sbuf[i] = 0;
     return sbuf;
