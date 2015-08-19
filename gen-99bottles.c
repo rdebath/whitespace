@@ -1,8 +1,6 @@
 
 #include "ws_gencode.h"
 
-#define ws_ret ws_return
-
 int main() {
 
 ws_comment( "Whitespace version of 99 bottles of beer (Bottles.ws) 2003-04-01"
@@ -183,7 +181,7 @@ ws_push(10);	/* ssststsl */
 ws_outc();	/* tlss */
 ws_push(10);	/* ssststsl */
 ws_outc();	/* tlss */
-ws_ret();	/* ltl */
+ws_return();	/* ltl */
 
 ws_label(4);	/* lsstssl */
 ws_dup();	/* sls */
@@ -210,7 +208,7 @@ ws_push(101);	/* sssttsststl */
 ws_outc();	/* tlss */
 ws_push(115);	/* ssstttssttl */
 ws_outc();	/* tlss */
-ws_ret();	/* ltl */
+ws_return();	/* ltl */
 
 ws_label(6);	/* lssttsl */
 ws_push(49);	/* sssttssstl */
@@ -229,7 +227,7 @@ ws_push(108);	/* sssttsttssl */
 ws_outc();	/* tlss */
 ws_push(101);	/* sssttsststl */
 ws_outc();	/* tlss */
-ws_ret();	/* ltl */
+ws_return();	/* ltl */
 
 ws_label(5);	/* lsststl */
 ws_drop();	/* sll */
@@ -263,6 +261,6 @@ ws_push(101);	/* sssttsststl */
 ws_outc();	/* tlss */
 ws_push(115);	/* ssstttssttl */
 ws_outc();	/* tlss */
-ws_ret();	/* ltl */
+ws_return();	/* ltl */
 
 }
