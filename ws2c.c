@@ -1,79 +1,27 @@
-%{
+
+#include <stdlib.h>
 #include <stdio.h>
-#define YY_INPUT(buf,result,max_size) result = ws_prefilter(buf,max_size)
-size_t ws_prefilter(char * buf, size_t maxsize);
+#include <string.h>
 
 int cv_number(char *);
 char * cv_label(char *);
 char * cv_chr(char *);
-%}
-    /* Not using these, make GCC STFU. */
-%option noinput
-%option nounput
 
-%option noyywrap
+void append_label(void);
+void append_char(void);
+int process_command(void);
 
-wsnum	[\t ]+\n
-wslbl	[\t ]*\n
+FILE * yyin;
 
-%%
+char * yytext;
+int yytext_size = 0, yytext_len;
 
-"\n\n\n"		printf("ws_exit();\t/* %s */\n", cv_chr(yytext));
+char * yylabel;
+int yylabel_size = 0, yylabel_len;
 
-"\n \n"{wslbl}		printf("ws_jump(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-"\n  "{wslbl}		printf("ws_label(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-"\n \t"{wslbl}		printf("ws_call(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-
-"\n\t\n"		printf("ws_ret();\t/* %s */\n", cv_chr(yytext));
-"\n\t "{wslbl}		printf("ws_jz(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-"\n\t\t"{wslbl}		printf("ws_jn(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
-
-" \n\n"			printf("ws_drop();\t/* %s */\n", cv_chr(yytext));
-" \n "			printf("ws_dup();\t/* %s */\n", cv_chr(yytext));
-" \n\t"			printf("ws_swap();\t/* %s */\n", cv_chr(yytext));
-
-"  "{wsnum}		printf("ws_push(%d);\t/* %s */\n", cv_number(yytext+2), cv_chr(yytext));
-
-" \t\n"{wsnum}		printf("ws_slide(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
-" \t "{wsnum}		printf("ws_pick(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
-
-"\t\n  "		printf("ws_outc();\t/* %s */\n", cv_chr(yytext));
-"\t\n \t"		printf("ws_outn();\t/* %s */\n", cv_chr(yytext));
-"\t\n\t "		printf("ws_readc();\t/* %s */\n", cv_chr(yytext));
-"\t\n\t\t"		printf("ws_readn();\t/* %s */\n", cv_chr(yytext));
-
-"\t  \n"		printf("ws_mul();\t/* %s */\n", cv_chr(yytext));
-"\t   "			printf("ws_add();\t/* %s */\n", cv_chr(yytext));
-"\t  \t"		printf("ws_sub();\t/* %s */\n", cv_chr(yytext));
-"\t \t "		printf("ws_div();\t/* %s */\n", cv_chr(yytext));
-"\t \t\t"		printf("ws_mod();\t/* %s */\n", cv_chr(yytext));
-
-"\t\t "			printf("ws_store();\t/* %s */\n", cv_chr(yytext));
-"\t\t\t"		printf("ws_fetch();\t/* %s */\n", cv_chr(yytext));
-
-    /* These are unallocated sequences */
-"\n\n "			|
-"\n\n\t"		|
-"  \n"			|
-" \t\t"			|
-"\t\n\n"		|
-"\t\n \n"		|
-"\t\n\t\n"		|
-"\t \n"			|
-"\t \t\n"		|
-"\t\t\n"		printf("ws_%s();\n", cv_chr(yytext));
-
-"\t"			printf("/* stray tab */\n");
-" "			printf("/* stray space */\n");
-"\n"			printf("/* stray linefeed */\n");
-
-.               	/* Already filtered. */;
-%%
 
 /* TODO:
     Add fallbacks for labels that are not defined.
-    Options to include debug information.
-
  */
 char * header;
 
@@ -88,11 +36,13 @@ int main(int argc, char ** argv)
 		perror(argv[1]);
 		exit(1);
 	    }
-	    yyrestart(yyin);
-	    BEGIN(INITIAL);
 	}
 
-	yylex();
+	while (!feof(yyin) && !ferror(yyin))
+	    process_command();
+
+	if (ferror(yyin))
+	    fprintf(stderr, "Error reading from file (ferror(3) so no reason given).\n");
 
 	if(argc>1) {
 	    fclose(yyin);
@@ -104,18 +54,157 @@ int main(int argc, char ** argv)
     return 0;
 }
 
-size_t
-ws_prefilter(char * buf, size_t max_size)
+int process_command()
 {
-    size_t n;
-    int c;
-    for ( n = 0; n < max_size && (c = getc( yyin )) != EOF ;) {
-	if (c == ' ' || c == '\t' || c == '\n')
-	    buf[n++] = (char) c;
+    yytext_len = yylabel_len = 0;
+    append_char();
+    if (feof(yyin) || ferror(yyin)) return;
+
+    if (yylabel_len != 0)
+	printf("/* %s */\n", yylabel);
+
+    append_char();
+    append_char();
+
+    if (yytext[0] == ' ') {
+	if (yytext[1] == ' ') {
+	    if (yytext[2] != '\n') {
+		append_label();
+		printf("ws_push(%d);\t/* %s */\n", cv_number(yytext+2), cv_chr(yytext));
+	    } else
+		printf("ws_%s();\n", cv_chr(yytext));
+	}
+	if (yytext[1] == '\n') {
+	    if (yytext[2] == ' ') printf("ws_dup();\t/* %s */\n", cv_chr(yytext));
+	    if (yytext[2] == '\n') printf("ws_drop();\t/* %s */\n", cv_chr(yytext));
+	    if (yytext[2] == '\t') printf("ws_swap();\t/* %s */\n", cv_chr(yytext));
+	}
+	if (yytext[1] == '\t') {
+	    if (yytext[2] != '\t') {
+		append_label();
+		if (yytext[2] == ' ') printf("ws_pick(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
+		if (yytext[2] == '\n') printf("ws_slide(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
+	    } else
+		printf("ws_%s();\n", cv_chr(yytext));
+	}
     }
-    if ( c == EOF && ferror( yyin ) )
-	YY_FATAL_ERROR( "input in flex scanner failed" );
-    return n;
+
+    if (yytext[0] == '\n') {
+	if (yytext[1] == ' ') {
+	    append_label();
+	    if (yytext[2] == ' ') printf("ws_label(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+	    if (yytext[2] == '\n') printf("ws_jump(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+	    if (yytext[2] == '\t') printf("ws_call(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+	}
+	if (yytext[1] == '\n') {
+	    if (yytext[2] == '\n')
+		printf("ws_exit();\t/* %s */\n", cv_chr(yytext));
+	    else
+		printf("ws_%s();\n", cv_chr(yytext));
+	}
+	if (yytext[1] == '\t') {
+	    if (yytext[2] != '\n') {
+		append_label();
+		if (yytext[2] == ' ') printf("ws_jz(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+		if (yytext[2] == '\t') printf("ws_jn(%s);\t/* %s */\n", cv_label(yytext+3), cv_chr(yytext));
+	    } else
+		printf("ws_ret();\t/* %s */\n", cv_chr(yytext));
+	}
+    }
+
+    if (yytext[0] == '\t') {
+	if (yytext[1] == ' ') {
+	    if (yytext[2] == '\n')
+		printf("ws_%s();\n", cv_chr(yytext));
+	    else {
+		append_char();
+		if (yytext[2] == ' ') {
+		    if (yytext[3] == ' ') printf("ws_add();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') printf("ws_mul();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_sub();\t/* %s */\n", cv_chr(yytext));
+		}
+		if (yytext[2] == '\t') {
+		    if (yytext[3] == ' ') printf("ws_div();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_mod();\t/* %s */\n", cv_chr(yytext));
+		}
+	    }
+	}
+	if (yytext[1] == '\n') {
+	    if (yytext[2] == '\n')
+		printf("ws_%s();\n", cv_chr(yytext));
+	    else {
+		append_char();
+		if (yytext[2] == ' ') {
+		    if (yytext[3] == ' ') printf("ws_outc();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_outn();\t/* %s */\n", cv_chr(yytext));
+		}
+		if (yytext[2] == '\t') {
+		    if (yytext[3] == ' ') printf("ws_readc();\t/* %s */\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+		    if (yytext[3] == '\t') printf("ws_readn();\t/* %s */\n", cv_chr(yytext));
+		}
+	    }
+	}
+	if (yytext[1] == '\t') {
+	    if (yytext[2] == ' ') printf("ws_store();\t/* %s */\n", cv_chr(yytext));
+	    if (yytext[2] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+	    if (yytext[2] == '\t') printf("ws_fetch();\t/* %s */\n", cv_chr(yytext));
+	}
+    }
+
+}
+
+void
+append_char() {
+    int ch;
+    for(;;)
+    {
+	ch = getc(yyin);
+	if (ch == '\n' || ch == '\t' || ch == ' ' || ch == EOF) break;
+
+	if (ch > ' ' && ch <= '~' ) {
+	    if (ch == '/' && yylabel_len != 0 && yylabel[yylabel_len-1] == '*')
+		ch = '\\'; /* Grrr */
+
+	    if (yylabel_len+2 >= yylabel_size) {
+		yylabel = realloc(yylabel, yylabel_size+=1024);
+		if (yylabel == 0) { perror("malloc"); exit(99); }
+	    }
+
+	    yylabel[yylabel_len++] = ch;
+	    yylabel[yylabel_len] = 0;
+	}
+    }
+    if (ch == EOF) ch = '\n';
+    if (yytext_len+2 >= yytext_size) {
+	yytext = realloc(yytext, yytext_size+=1024);
+	if (yytext == 0) { perror("malloc"); exit(99); }
+    }
+    yytext[yytext_len++] = ch;
+    yytext[yytext_len] = 0;
+}
+
+void
+append_label()
+{
+    int ch;
+
+    do
+    {
+	ch = getc(yyin);
+	if (ch == EOF) return;
+	if (ch == ' ' || ch == '\t' || ch == '\n') {
+	    if (yytext_len+2 >= yytext_size) {
+		yytext = realloc(yytext, yytext_size+=1024);
+		if (yytext == 0) { perror("malloc"); exit(99); }
+	    }
+	    yytext[yytext_len++] = ch;
+	    yytext[yytext_len] = 0;
+	}
+    }
+    while(ch != '\n');
 }
 
 int cv_number(char * ws_num)
@@ -123,8 +212,10 @@ int cv_number(char * ws_num)
     int negative = (*ws_num++ != ' ');
     int value = 0;
 
-    if (strlen(ws_num) > 32)
-	YY_FATAL_ERROR( "Literal constant too large" );
+    if (strlen(ws_num) > 32) {
+	fprintf(stderr, "Literal constant too large: '%s'", ws_num);
+	exit(99);
+    }
 
     while(*ws_num != '\n') {
 	value *= 2;

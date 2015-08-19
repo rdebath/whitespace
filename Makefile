@@ -1,1 +1,1 @@
-all: wsc wsconv wsa
+all: wsc ws2c wsa
