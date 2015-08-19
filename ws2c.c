@@ -3,7 +3,20 @@
 #include <stdio.h>
 #include <string.h>
 
-int cv_number(char *);
+# ifndef NO_INTTYPES
+#  include <inttypes.h>
+#  define cell_t                intmax_t
+#  define INTcell_C(mpm)        INTMAX_C(mpm)
+#  define PRIdcell              PRIdMAX
+#  define SCNdcell              SCNdMAX
+# else
+#  define cell_t                long
+#  define INTcell_C(mpm)        mpm ## L
+#  define PRIdcell              "ld"
+#  define SCNdcell              "ld"
+# endif
+
+cell_t cv_number(char *);
 char * cv_label(char *);
 char * cv_chr(char *);
 
@@ -57,21 +70,22 @@ int main(int argc, char ** argv)
 void
 process_command()
 {
-    yytext_len = yylabel_len = 0;
+    yytext_len = 0;
     append_char();
     if (feof(yyin) || ferror(yyin)) return;
 
-    if (yylabel_len != 0)
-	printf("/* %s */\n", yylabel);
+    append_char();
+    append_char();
 
-    append_char();
-    append_char();
+    if (yylabel_len != 0)
+	printf("/* %s*/\n", yylabel);
+    yylabel_len = 0;
 
     if (yytext[0] == ' ') {
 	if (yytext[1] == ' ') {
 	    if (yytext[2] != '\n') {
 		append_label();
-		printf("ws_push(%d);\t/* %s */\n", cv_number(yytext+2), cv_chr(yytext));
+		printf("ws_push(%"PRIdcell");\t/* %s */\n", cv_number(yytext+2), cv_chr(yytext));
 	    } else
 		printf("ws_%s();\n", cv_chr(yytext));
 	}
@@ -83,8 +97,8 @@ process_command()
 	if (yytext[1] == '\t') {
 	    if (yytext[2] != '\t') {
 		append_label();
-		if (yytext[2] == ' ') printf("ws_pick(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
-		if (yytext[2] == '\n') printf("ws_slide(%d);\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
+		if (yytext[2] == ' ') printf("ws_pick(%"PRIdcell");\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
+		if (yytext[2] == '\n') printf("ws_slide(%"PRIdcell");\t/* %s */\n", cv_number(yytext+3), cv_chr(yytext));
 	    } else
 		printf("ws_%s();\n", cv_chr(yytext));
 	}
@@ -165,11 +179,11 @@ append_char() {
 	ch = getc(yyin);
 	if (ch == '\n' || ch == '\t' || ch == ' ' || ch == EOF) break;
 
-	if (ch > ' ' && ch <= '~' ) {
+	if ((ch > ' ' && ch <= '~') || ch >= 0x80 || ch < 0) {
 	    if (ch == '/' && yylabel_len != 0 && yylabel[yylabel_len-1] == '*')
 		ch = '\\'; /* Grrr */
 
-	    if (yylabel_len+2 >= yylabel_size) {
+	    if (yylabel_len+4 >= yylabel_size) {
 		yylabel = realloc(yylabel, yylabel_size+=1024);
 		if (yylabel == 0) { perror("malloc"); exit(99); }
 	    }
@@ -185,37 +199,27 @@ append_char() {
     }
     yytext[yytext_len++] = ch;
     yytext[yytext_len] = 0;
+
+    if (yylabel_len > 0 && yylabel[yylabel_len-1] != ' ') {
+	yylabel[yylabel_len++] = ' ';
+	yylabel[yylabel_len] = 0;
+    }
 }
 
 void
 append_label()
 {
-    int ch;
-
-    do
-    {
-	ch = getc(yyin);
-	if (ch == EOF) return;
-	if (ch == ' ' || ch == '\t' || ch == '\n') {
-	    if (yytext_len+2 >= yytext_size) {
-		yytext = realloc(yytext, yytext_size+=1024);
-		if (yytext == 0) { perror("malloc"); exit(99); }
-	    }
-	    yytext[yytext_len++] = ch;
-	    yytext[yytext_len] = 0;
-	}
-    }
-    while(ch != '\n');
+    do { append_char(); } while(yytext[yytext_len-1] != '\n');
 }
 
-int cv_number(char * ws_num)
+cell_t
+cv_number(char * ws_num)
 {
     int negative = (*ws_num++ != ' ');
-    int value = 0;
+    cell_t value = 0;
 
-    if (strlen(ws_num) > 32) {
-	fprintf(stderr, "Literal constant too large: '%s'", ws_num);
-	exit(99);
+    if (strlen(ws_num) > sizeof(cell_t) * 8) {
+	fprintf(stderr, "WARNING: Literal constant too large: '..%s'\n", cv_chr(ws_num));
     }
 
     while(*ws_num != '\n') {
