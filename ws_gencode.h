@@ -16,6 +16,7 @@
 #define ws_jp(x) ws_jp_int(atom(#x))
 #define ws_jzn(x) ws_jzn_int(atom(#x))
 #define ws_jzp(x) ws_jzp_int(atom(#x))
+#define ws_jnz(x) ws_jnz_int(atom(#x))
 #define ws_call(x) ws_call_int(atom(#x))
 
 #else
@@ -27,6 +28,7 @@
 #define ws_jp(x) ws_jp_int(x)
 #define ws_jzn(x) ws_jzn_int(x)
 #define ws_jzp(x) ws_jzp_int(x)
+#define ws_jnz(x) ws_jnz_int(x)
 #define ws_call(x) ws_call_int(x)
 
 #endif
@@ -127,6 +129,14 @@ static void ws_jzn_int(int v) {
     ws_jump_int(v);
     ws_label_int(t2);
     ws_drop();
+}
+
+/* Jump if Not zero */
+static void ws_jnz_int(int v) {
+    int t = atom("");
+    ws_jz_int(t);
+    ws_jump_int(v);
+    ws_label_int(t);
 }
 
 static void

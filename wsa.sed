@@ -1,5 +1,6 @@
 
 1i\
+#define ATOMISE_LABELS\
 #include "ws_gencode.h"\
 main() {
 $a\
@@ -30,15 +31,17 @@ s/^ *pop *$/ws_drop();/
 s/^ *InC *$/ws_readc();/i
 s/^ *InN *$/ws_readn();/i
 
-s/^ *call *\([A-Za-z][A-Za-z0-9_]*\)[    ]*$/ws_call(atom("\1"));/
-s/^ *jump *\([A-Za-z][A-Za-z0-9_]*\)[    ]*$/ws_jump(atom("\1"));/
-s/^ *jumpz *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jz(atom("\1"));/
-s/^ *jumpn *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jn(atom("\1"));/
-s/^ *label *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_label(atom("\1"));/
+s/^ *call *\([A-Za-z][A-Za-z0-9_]*\)[    ]*$/ws_call(\1);/
+s/^ *jump *\([A-Za-z][A-Za-z0-9_]*\)[    ]*$/ws_jump(\1);/
+s/^ *jumpz *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jz(\1);/
+s/^ *jumpn *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jn(\1);/
+s/^ *label *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_label(\1);/
 
-s/^ *jumppz *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jpz(atom("\1"));/
-s/^ *jumpnz *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jnz(atom("\1"));/
-s/^ *jumpp *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jp(atom("\1"));/
+s/^ *jumppz *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jzp(\1);/
+s/^ *jumpnz *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jzn(\1);/
+s/^ *jumpp *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jp(\1);/
+s/^ *jumppn *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jnz(\1);/
+s/^ *jumpnp *\([A-Za-z][A-Za-z0-9_]*\)[   ]*$/ws_jnz(\1);/
 
 s/^ *pushs *\("[^"]*"\) *$/ws_pushs(\1);/
 s/^ *push *\([0-9][0-9]*\)/ws_push(\1);/
