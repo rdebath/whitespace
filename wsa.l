@@ -28,54 +28,54 @@ w	[ \t]*
 <INITIAL>{
 {digs}:		|
 \.{name}{w}:	|
-{name}{w}:	{ printf("Label %s\n", yytext); BEGIN(BODY); }
+{name}{w}:	{ printf("ws_label(%.*s);\n", yyleng-1, yytext); BEGIN(BODY); }
 }
 
 <INITIAL,BODY>{
-(quit|exit|end)		|
-(drop|discard)		|
-(ret|return)		|
-(fetch|retrieve|retrive|retreive)	|
-dup			|
-swap			|
-(outc|outchar|printc)	|
-(outn|outnum|printi)	|
-(readc|readchar)	|
-(readn|readnum|readi)	|
-store			|
-mul			|
-add			|
-sub			|
-div			|
-mod			{ printf("keyword %s\n", yytext); BEGIN(EOL); }
+(quit|exit|end)		{ printf("ws_exit();\n"); BEGIN(EOL); }
+(drop|discard)		{ printf("ws_drop();\n"); BEGIN(EOL); }
+(ret|return)		{ printf("ws_return();\n"); BEGIN(EOL); }
+(fetch|retrieve|retrive|retreive)	{ printf("ws_fetch();\n"); BEGIN(EOL); }
+dup			{ printf("ws_dup();\n"); BEGIN(EOL); }
+swap			{ printf("ws_swap();\n"); BEGIN(EOL); }
+(outc|outchar|printc)	{ printf("ws_outc();\n"); BEGIN(EOL); }
+(outn|outnum|printi)	{ printf("ws_outn();\n"); BEGIN(EOL); }
+(readc|readchar)	{ printf("ws_readc();\n"); BEGIN(EOL); }
+(readn|readnum|readi)	{ printf("ws_readn();\n"); BEGIN(EOL); }
+store			{ printf("ws_store();\n"); BEGIN(EOL); }
+mul			{ printf("ws_mul();\n"); BEGIN(EOL); }
+add			{ printf("ws_add();\n"); BEGIN(EOL); }
+sub			{ printf("ws_sub();\n"); BEGIN(EOL); }
+div			{ printf("ws_div();\n"); BEGIN(EOL); }
+mod			{ printf("ws_mod();\n"); BEGIN(EOL); }
 
-slide		|
-(copy|pick)	|
-push		{ printf("NumbWord %s:", yytext); BEGIN(NUMARG); }
+slide		{ printf("ws_slide("); BEGIN(NUMARG); }
+(copy|pick)	{ printf("ws_pick("); BEGIN(NUMARG); }
+push		{ printf("ws_push("); BEGIN(NUMARG); }
 
-(jmp|jump)	|
-label		|
-call		|
-jz		|
-jn		{ printf("LblWord %s:", yytext); BEGIN(LBLARG); }
+(jmp|jump)	{ printf("ws_jump("); BEGIN(LBLARG); }
+label		{ printf("ws_label("); BEGIN(LBLARG); }
+call		{ printf("ws_call("); BEGIN(LBLARG); }
+jz		{ printf("ws_jz("); BEGIN(LBLARG); }
+jn		{ printf("ws_jn("); BEGIN(LBLARG); }
 
 }
 
 <NUMARG>{
--?[0-9]+	{ printf("Number %s\n", yytext); BEGIN(EOL); }
+-?[0-9]+	{ printf("%s);\n", yytext); BEGIN(EOL); }
 
 '[^\\]'		|
-'\\[ntab']'	{ printf("CharLit %s\n", yytext); BEGIN(EOL); }
+'\\[ntab']'	{ printf("%s);\n", yytext); BEGIN(EOL); }
 
-\n		{ printf("MISSING value\n"); BEGIN(INITIAL); }
+\n		{ printf("); Error missing value\n"); BEGIN(INITIAL); }
 }
 
 <LBLARG>{
 {digs}		|
 {name}		|
-\.{name}	{ printf("Label_ref %s\n", yytext); BEGIN(EOL); }
+\.{name}	{ printf("%s);\n", yytext); BEGIN(EOL); }
 
-\n		{ printf("MISSING label\n"); BEGIN(INITIAL); }
+\n		{ printf("); Error missing label\n"); BEGIN(INITIAL); }
 }
 
 <ERROR>.*\n	{ BEGIN(INITIAL); }
@@ -87,7 +87,7 @@ jn		{ printf("LblWord %s:", yytext); BEGIN(LBLARG); }
 "\n"		{ BEGIN(INITIAL); }
 
 .               |
-{name}		{ printf("Badword \"%s\" on line %d\n", yytext, yylineno); BEGIN(ERROR); }
+{name}		{ printf("Error badword \"%s\" on line %d\n", yytext, yylineno); BEGIN(ERROR); }
 %%
 
 /* TODO:
