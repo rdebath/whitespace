@@ -35,6 +35,9 @@ int yylabel_size = 0, yylabel_len;
 
 /* TODO:
     Add fallbacks for labels that are not defined.
+    Run C code via DLL.
+    Header for GMP.
+    Built in interpreter.
  */
 char * header;
 
@@ -75,10 +78,16 @@ process_command()
 {
     yytext_len = 0;
     append_char();
-    if (feof(yyin) || ferror(yyin)) return;
+    if (yytext_len == 0) return;
 
     append_char();
     append_char();
+
+    if (feof(yyin)) {
+	fprintf(stderr, "WARNING: Partial instruction at end of file: '%s'\n",
+		 cv_chr(yytext));
+	return;
+    }
 
     if (yylabel_len != 0)
 	printf("/* %s*/\n", yylabel);
@@ -205,7 +214,8 @@ append_char() {
 	    yylabel[yylabel_len] = 0;
 	}
     }
-    if (ch == EOF) ch = '\n';
+    if (ch == EOF) return;
+
     if (yytext_len+2 >= yytext_size) {
 	yytext = realloc(yytext, yytext_size+=1024);
 	if (yytext == 0) { perror("malloc"); exit(99); }
@@ -222,7 +232,12 @@ append_char() {
 void
 append_label()
 {
-    do { append_char(); } while(yytext[yytext_len-1] != '\n');
+    do {
+	append_char();
+    } while(yytext[yytext_len-1] != '\n' && !feof(yyin));
+    if (feof(yyin))
+	fprintf(stderr, "WARNING: Partial instruction at end of file: '%s'\n",
+		 cv_chr(yytext));
 }
 
 cell_t
