@@ -23,6 +23,7 @@ char * cv_chr(char *);
 void append_label(void);
 void append_char(void);
 void process_command(void);
+void broken_command(void);
 
 FILE * yyin;
 
@@ -88,7 +89,7 @@ process_command()
 		append_label();
 		printf("ws_push(%"PRIdcell");", cv_number(yytext+2));
 	    } else
-		printf("ws_%s();\n", cv_chr(yytext));
+		broken_command();
 	}
 	if (yytext[1] == '\n') {
 	    if (yytext[2] == ' ') printf("ws_dup();");
@@ -101,7 +102,7 @@ process_command()
 		if (yytext[2] == ' ') printf("ws_pick(%"PRIdcell");", cv_number(yytext+3));
 		if (yytext[2] == '\n') printf("ws_slide(%"PRIdcell");", cv_number(yytext+3));
 	    } else
-		printf("ws_%s();\n", cv_chr(yytext));
+		broken_command();
 	}
     }
 
@@ -116,7 +117,7 @@ process_command()
 	    if (yytext[2] == '\n')
 		printf("ws_exit();");
 	    else
-		printf("ws_%s();\n", cv_chr(yytext));
+		broken_command();
 	}
 	if (yytext[1] == '\t') {
 	    if (yytext[2] != '\n') {
@@ -131,7 +132,7 @@ process_command()
     if (yytext[0] == '\t') {
 	if (yytext[1] == ' ') {
 	    if (yytext[2] == '\n')
-		printf("ws_%s();\n", cv_chr(yytext));
+		broken_command();
 	    else {
 		append_char();
 		if (yytext[2] == ' ') {
@@ -141,36 +142,42 @@ process_command()
 		}
 		if (yytext[2] == '\t') {
 		    if (yytext[3] == ' ') printf("ws_div();");
-		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') broken_command();
 		    if (yytext[3] == '\t') printf("ws_mod();");
 		}
 	    }
 	}
 	if (yytext[1] == '\n') {
 	    if (yytext[2] == '\n')
-		printf("ws_%s();\n", cv_chr(yytext));
+		broken_command();
 	    else {
 		append_char();
 		if (yytext[2] == ' ') {
 		    if (yytext[3] == ' ') printf("ws_outc();");
-		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') broken_command();
 		    if (yytext[3] == '\t') printf("ws_outn();");
 		}
 		if (yytext[2] == '\t') {
 		    if (yytext[3] == ' ') printf("ws_readc();");
-		    if (yytext[3] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+		    if (yytext[3] == '\n') broken_command();
 		    if (yytext[3] == '\t') printf("ws_readn();");
 		}
 	    }
 	}
 	if (yytext[1] == '\t') {
 	    if (yytext[2] == ' ') printf("ws_store();");
-	    if (yytext[2] == '\n') printf("ws_%s();\n", cv_chr(yytext));
+	    if (yytext[2] == '\n') broken_command();
 	    if (yytext[2] == '\t') printf("ws_fetch();");
 	}
     }
 
     printf("\t/* %s */\n", cv_chr(yytext));
+}
+
+void broken_command()
+{
+    char * s = cv_chr(yytext);
+    printf("if (ws_%s) ws_%s();", s, s);
 }
 
 void
