@@ -4,7 +4,7 @@
 
 #include "ws_gencode.h"
 
-main()
+int main()
 {
 // get prim numbers
 

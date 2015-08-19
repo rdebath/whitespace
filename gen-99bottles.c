@@ -3,7 +3,7 @@
 
 #define ws_ret ws_return
 
-main() {
+int main() {
 
 ws_comment( "Whitespace version of 99 bottles of beer (Bottles.ws) 2003-04-01"
 "\n"	    "See http://compsoc.dur.ac.uk/whitespace/ for details interpreter"

@@ -3,7 +3,8 @@
 #define xVERBOSE
 
 #include "ws_gencode.h"
-main() {
+
+int main() {
 /*
 options
 

@@ -1,9 +1,11 @@
 
 #include "ws_gencode.h"
 
-int
-main(void)
+int main(void)
 {
+    ws_comment( "http://esolangs.org/wiki/Deadfish#Whitespace"
+    "\n"	"by Robert de Bath (2015)");
+
     ws_push(0);	// x
     ws_label(1);
 
@@ -88,5 +90,5 @@ main(void)
 
     ws_exit();
 
-    exit(0);
+    return 0;
 }
