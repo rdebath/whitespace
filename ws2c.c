@@ -63,6 +63,10 @@ struct pnode {
     struct pnode *next_reflist;
 };
 
+#define EMBEDDED_WS
+#include "ws_engine.h"
+#include "ws_engine_txt.h"
+
 cell_t cv_number(char *);
 char *cv_label(char *);
 char *cv_chr(char *);
@@ -80,6 +84,7 @@ void process_tree(void);
 void *tcalloc(size_t nmemb, size_t size);
 struct pnode *add_node_after(struct pnode *p);
 struct labelnode *find_label(char *label);
+void run_tree(void);
 void dump_tree(void);
 
 struct pnode *wsprog = 0, *wsprogend;
@@ -94,18 +99,14 @@ int yytext_size = 0, yytext_len;
 char *yylabel;
 int yylabel_size = 0, yylabel_len;
 
-char *header;
-
 int opt_v0_2 = 0;
-int interpret_now = 0;
+int interpret_now = 1;
 int on_eof = -1;
 int debug = 0;
+int comment_lines = 0;
 
 /* TODO:
-    Add fallbacks for labels that are not defined.
-    Run C code via DLL.
     Header for GMP.
-    Built in interpreter.
  */
 int
 main(int argc, char ** argv)
@@ -123,6 +124,9 @@ main(int argc, char ** argv)
 	if(argc>1 && argv[1][0] == '-' && enable_opts) {
 	    if (!strcmp(argv[1], "--")) enable_opts = 1;
 	    else if (!done_file && !strcmp(argv[1], "-r")) interpret_now = 1;
+	    else if (!done_file && !strcmp(argv[1], "-c")) interpret_now = 0;
+	    else if (!strcmp(argv[1], "-v")) comment_lines++;
+
 	    else if (!strcmp(argv[1], "-e")) on_eof = -1;
 	    else if (!strcmp(argv[1], "-z")) on_eof = 0;
 	    else if (!strcmp(argv[1], "-n")) on_eof = 1;
@@ -164,7 +168,7 @@ main(int argc, char ** argv)
 	setbuf(stdout, 0);
 	process_tree();
 
-	dump_tree();
+	run_tree();
     }
     return 0;
 }
@@ -185,8 +189,14 @@ process_command()
 	return;
     }
 
-    if (yylabel_len != 0 && !interpret_now)
-	printf("/* %s*/\n", yylabel);
+    if (yylabel_len != 0) {
+	if (!interpret_now)
+	    printf("/* %s*/\n", yylabel);
+	else if (comment_lines > 0) {
+	    comment_lines--;
+	    printf("> %s\n", yylabel);
+	}
+    }
     yylabel_len = 0;
 
     if (yytext[0] == ' ') {
@@ -467,8 +477,12 @@ void
 process_token_v(int token)
 {
     if (!interpret_now) {
+	inum ++;
+#ifdef WS_TRACE
+	printf("ws_trace(%d);\n", inum);
+#endif
 	printf("ws_%s();", cmdnames[token]);
-	printf("\t/* %d: %s */\n", ++inum, cv_chr(yytext));
+	printf("\t/* %d: %s */\n", inum, cv_chr(yytext));
 	return;
     } else {
 	struct pnode * n = add_node_after(wsprogend);
@@ -481,8 +495,12 @@ void
 process_token_i(int token, cell_t value)
 {
     if (!interpret_now) {
+	inum ++;
+#ifdef WS_TRACE
+	printf("ws_trace(%d);\n", inum);
+#endif
 	printf("ws_%s(%"PRIdcell");", cmdnames[token], value);
-	printf("\t/* %d: %s */\n", ++inum, cv_chr(yytext));
+	printf("\t/* %d: %s */\n", inum, cv_chr(yytext));
 	return;
     } else {
 	struct pnode * n = add_node_after(wsprogend);
@@ -496,8 +514,12 @@ void
 process_token_l(int token, char * label)
 {
     if (!interpret_now) {
+	inum ++;
+#ifdef WS_TRACE
+	if (token != T_LABEL) printf("ws_trace(%d);\n", inum);
+#endif
 	printf("ws_%s(%s);", cmdnames[token], label);
-	printf("\t/* %d: %s */\n", ++inum, cv_chr(yytext));
+	printf("\t/* %d: %s */\n", inum, cv_chr(yytext));
 	return;
     } else {
 	struct pnode * n = add_node_after(wsprogend);
@@ -628,9 +650,8 @@ dump_tree()
     struct pnode *n, *p;
 
     for(n = wsprog; n; n=n->next) {
-	if (n->plabel) {
-	    printf("L_%s: ", n->plabel->name);
-	}
+	if (n->plabel)
+	    printf("ws_label(%s);\n", n->plabel->name);
 
 	printf("ws_%s", cmdnames[n->type]);
 	if (n->type == T_PUSH || n->type == T_PICK || n->type == T_SLIDE)
@@ -662,219 +683,119 @@ dump_tree()
     }
 }
 
-char * header =
+void
+run_tree()
+{
+    struct pnode * n;
 
-	"#include <stdio.h>"
-"\n"	"#include <stdlib.h>"
-"\n"	"#include <unistd.h>"
-"\n"
-"\n"	"# ifndef NO_INTTYPES"
-"\n"	"#  include <inttypes.h>"
-"\n"	"#  define cell_t\t\tintmax_t"
-"\n"	"#  define INTcell_C(mpm)\tINTMAX_C(mpm)"
-"\n"	"#  define PRIdcell\t\tPRIdMAX"
-"\n"	"#  define SCNdcell\t\tSCNdMAX"
-"\n"	"# else"
-"\n"	"#  define cell_t\t\tlong"
-"\n"	"#  define INTcell_C(mpm)\tmpm ## L"
-"\n"	"#  define PRIdcell\t\t\"ld\""
-"\n"	"#  define SCNdcell\t\t\"ld\""
-"\n"	"# endif"
-"\n"
-"\n"	"# ifdef __GNUC__"
-"\n"	"#  define GCC_UNUSED __attribute__ ((unused))"
-"\n"	"# else"
-"\n"	"#  define GCC_UNUSED"
-"\n"	"# endif"
-"\n"
-"\n"	"#define LOCALLIB static inline GCC_UNUSED"
-"\n"
-"\n"	"#define ws_label(x)\tL_ ## x:"
-"\n"	"#define ws_call(x)\trpush(__LINE__); goto L_ ## x; case __LINE__:"
-"\n"	"#define ws_jump(x)\tgoto L_ ## x"
-"\n"	"#define ws_jz(x)\tif(ws_pop() == 0) goto L_ ## x"
-"\n"	"#define ws_jn(x)\tif(ws_pop() < 0) goto L_ ## x"
-"\n"	"#define ws_return()\tcontinue"
-"\n"	"#define ws_exit()\texit(0)"
-"\n"
-"\n"	"cell_t * main_stack = 0;"
-"\n"	"int main_slen = 0, main_sp = 0;"
-"\n"
-"\n"	"int * retr_stack = 0;"
-"\n"	"int retr_slen = 0, retr_sp = 0;"
-"\n"
-"\n"	"cell_t *memory = 0;"
-"\n"	"int memlen = 0;"
-"\n"
-"\n"	"# ifndef NO_MEMORYCHECK"
-"\n"	"static void check_memory(cell_t mptr) {"
-"\n"	"static int mccount = 5;"
-"\n"	"    if (mptr >= 0 && mptr < memlen) return;"
-"\n"	"    if (mccount == 0) return;"
-"\n"
-"\n"	"    if (mptr < 0) {"
-"\n"	"\tfprintf(stderr, \"Memory pointer %\"PRIdcell\" is illegal.\\n\", mptr);"
-"\n"	"    } else {"
-"\n"	"\tfprintf(stderr, \"Memory pointer %\"PRIdcell\" has not been allocated.\\n\", mptr);"
-"\n"	"    }"
-"\n"
-"\n"	"    if (--mccount == 0)"
-"\n"	"\tfprintf(stderr, \"Disabling memory_check() for this run\\n\");"
-"\n"	"}"
-"\n"	"# endif"
-"\n"
-"\n"	"static void extend_memory(cell_t mptr) {"
-"\n"	"    int oldmsize, newmsize, i;"
-"\n"	"    if (mptr < 0) {"
-"\n"	"\tfprintf(stderr, \"Memory pointer %\"PRIdcell\" is illegal.\\n\", mptr);"
-"\n"	"\texit(99);"
-"\n"	"    }"
-"\n"	"    if (mptr < memlen) return;"
-"\n"
-"\n"	"    oldmsize = ((memlen+4095)/4096)*4096;"
-"\n"	"    memlen = mptr + 1;"
-"\n"	"    newmsize = ((memlen+4095)/4096)*4096;"
-"\n"	"    if (oldmsize == newmsize) return;"
-"\n"	"    memory = realloc(memory, newmsize*sizeof*memory);"
-"\n"	"    if (memory == 0) {"
-"\n"	"\tfprintf(stderr, \"Out of memory: %\"PRIdcell\"\\n\", mptr);"
-"\n"	"\texit(4);"
-"\n"	"    }"
-"\n"	"    for(i=oldmsize; i<newmsize; i++)"
-"\n"	"\tmemory[i] = 0;"
-"\n"	"}"
-"\n"
-"\n"	"static void rextend(void) {"
-"\n"	"    retr_stack = realloc(retr_stack, (retr_slen += 1024)*sizeof*retr_stack);"
-"\n"	"    if (!retr_stack) {"
-"\n"	"\tperror(\"wsi: return stack\");"
-"\n"	"\texit(1);"
-"\n"	"    }"
-"\n"	"}"
-"\n"
-"\n"	"LOCALLIB void rpush(int val) {"
-"\n"	"    if (retr_sp >= retr_slen) rextend();"
-"\n"	"    retr_stack[retr_sp++] = val;"
-"\n"	"}"
-"\n"
-"\n"	"LOCALLIB int rpop() {"
-"\n"	"    if(retr_sp == 0) {"
-"\n"	"\tfprintf(stderr, \"Return stack underflow\\n\");"
-"\n"	"\texit(99);"
-"\n"	"    }"
-"\n"	"    return retr_stack[--retr_sp];"
-"\n"	"}"
-"\n"
-"\n"	"static void mstackempty(void) {"
-"\n"	"    fprintf(stderr, \"Main stack underflow\\n\");"
-"\n"	"    exit(99);"
-"\n"	"}"
-"\n"
-"\n"	"static void mextend(void) {"
-"\n"	"    main_stack = realloc(main_stack, (main_slen += 1024)*sizeof*main_stack);"
-"\n"	"    if (!main_stack) {"
-"\n"	"\tperror(\"wsi: main stack\");"
-"\n"	"\texit(1);"
-"\n"	"    }"
-"\n"	"}"
-"\n"
-"\n"	"# ifdef NO_STACKCHECK"
-"\n"	"#  define mstacktwo()"
-"\n"	"#  define mstackone()"
-"\n"	"# else"
-"\n"	"LOCALLIB void mstacktwo() { if (main_sp < 2) mstackempty(); }"
-"\n"	"LOCALLIB void mstackone() { if (main_sp < 1) mstackempty(); }"
-"\n"	"# endif"
-"\n"
-"\n"	"#define TOS (main_stack[main_sp-1])"
-"\n"	"#define NOS (main_stack[main_sp-2])"
-"\n"
-"\n"	"LOCALLIB void ws_push(cell_t val) {"
-"\n"	"    if (main_sp >= main_slen) mextend();"
-"\n"	"    main_stack[main_sp++] = val;"
-"\n"	"}"
-"\n"
-"\n"	"LOCALLIB cell_t ws_pop() {"
-"\n"	"    mstackone();"
-"\n"	"    return main_stack[--main_sp];"
-"\n"	"}"
-"\n"
-"\n"	"LOCALLIB void ws_drop() { ws_pop(); }"
-"\n"	"LOCALLIB void ws_dup() { mstackone(); ws_push(TOS); }"
-"\n"	"LOCALLIB void ws_swap() { cell_t t; mstacktwo(); t = TOS; TOS = NOS; NOS = t; }"
-"\n"	"LOCALLIB void ws_add() { mstacktwo(); NOS = NOS + TOS; main_sp--; }"
-"\n"	"LOCALLIB void ws_sub() { mstacktwo(); NOS = NOS - TOS; main_sp--; }"
-"\n"	"LOCALLIB void ws_mul() { mstacktwo(); NOS = NOS * TOS; main_sp--; }"
-"\n"	"LOCALLIB void ws_div() { mstacktwo(); if (TOS) NOS = NOS / TOS; else NOS=0; main_sp--; }"
-"\n"	"LOCALLIB void ws_mod() { mstacktwo(); if (TOS) NOS = NOS % TOS; else NOS=0; main_sp--; }"
-"\n"
-"\n"	"LOCALLIB void ws_store() {"
-"\n"	"    mstacktwo();"
-"\n"	"    extend_memory(NOS);"
-"\n"	"    memory[NOS] = TOS;"
-"\n"	"    main_sp -= 2;"
-"\n"	"}"
-"\n"
-"\n"	"LOCALLIB void ws_fetch() {"
-"\n"	"    mstackone();"
-"\n"	"    if (TOS < 0 || TOS >= memlen) {"
-"\n"	"# ifndef NO_MEMORYCHECK"
-"\n"	"\tcheck_memory(TOS);"
-"\n"	"# endif"
-"\n"	"\tTOS = 0;"
-"\n"	"\treturn;"
-"\n"	"    }"
-"\n"	"    TOS = memory[TOS];"
-"\n"	"}"
-"\n"
-"\n"	"LOCALLIB void ws_outc() { mstackone(); putchar(TOS); main_sp--; }"
-"\n"
-"\n"	"LOCALLIB void ws_readc() {"
-"\n"	"    mstackone();"
-"\n"	"    extend_memory(TOS);"
-"\n"	"    memory[TOS] = getchar();"
-"\n"	"    main_sp--;"
-"\n"	"}"
-"\n"
-"\n"	"static GCC_UNUSED void ws_outn() { mstackone(); printf(\"%\"PRIdcell, TOS); main_sp--; }"
-"\n"
-"\n"	"static GCC_UNUSED void ws_readn() {"
-"\n"	"    char ibuf[1024];"
-"\n"	"    mstackone();"
-"\n"	"    extend_memory(TOS);"
-"\n"	"    if (fgets(ibuf, sizeof(ibuf), stdin)) {"
-"\n"	"\tcell_t val = 0;"
-"\n"	"\tsscanf(ibuf, \"%\"SCNdcell, &val);"
-"\n"	"\tmemory[TOS] = val;"
-"\n"	"    } else"
-"\n"	"\tmemory[TOS] = 0;"
-"\n"	"    main_sp--;"
-"\n"	"}"
-"\n"
-"\n"	"static GCC_UNUSED void ws_pick(cell_t val) {"
-"\n"	"    if(val < 0 || val >= main_sp) mstackempty();"
-"\n"	"    ws_push(main_stack[main_sp-val-1]);"
-"\n"	"}"
-"\n"
-"\n"	"static GCC_UNUSED void ws_slide(cell_t val) {"
-"\n"	"    cell_t t;"
-"\n"	"    mstackone();"
-"\n"	"    t = TOS;"
-"\n"	"    while(val-->0 && main_sp) ws_drop();"
-"\n"	"    mstackone();"
-"\n"	"    TOS = t;"
-"\n"	"}"
-"\n"
-"\n"	"int"
-"\n"	"main(void)"
-"\n"	"{"
-"\n"	"    setbuf(stdout, 0);"
-"\n"	"    rpush(-1);"
-"\n"
-"\n"	"    while(1) {"
-"\n"	"\tswitch(rpop()) {"
-"\n"	"\tcase -1:;"
-"\n"
-"\n"	"#define ws_trailer } ws_exit(); } }"
+    for(n = wsprog; n; ) {
+#ifdef WS_TRACE
+	ws_trace(n->inum);
+#endif
+	switch(n->type) {
+	case T_PUSH:
+	    ws_push(n->value);
+	    break;
 
-;
+	case T_DUP:
+	    ws_dup();
+	    break;
+
+	case T_DROP:
+	    ws_drop();
+	    break;
+
+	case T_SWAP:
+	    ws_swap();
+	    break;
+
+	case T_PICK:
+	    ws_pick(n->value);
+	    break;
+
+	case T_SLIDE:
+	    ws_slide(n->value);
+	    break;
+
+	case T_JUMP:
+	    n = n->jmp;
+	    continue;
+
+	case T_CALL:
+	    rpush(n);
+	    n = n->jmp;
+	    continue;
+
+	case T_EXIT:
+	    return;
+
+	case T_JZ:
+	    if(ws_pop() == 0) {
+		n = n->jmp;
+		continue;
+	    }
+	    break;
+
+	case T_JN:
+	    if(ws_pop() < 0) {
+		n = n->jmp;
+		continue;
+	    }
+	    break;
+
+	case T_RETURN:
+	    n = rpop();
+	    break;
+
+	case T_ADD:
+	    ws_add();
+	    break;
+
+	case T_MUL:
+	    ws_mul();
+	    break;
+
+	case T_SUB:
+	    ws_sub();
+	    break;
+
+	case T_DIV:
+	    ws_div();
+	    break;
+
+	case T_MOD:
+	    ws_mod();
+	    break;
+
+	case T_OUTC:
+	    ws_outc();
+	    break;
+
+	case T_OUTN:
+	    ws_outn();
+	    break;
+
+	case T_READC:
+	    ws_readc();
+	    break;
+
+	case T_READN:
+	    ws_readn();
+	    break;
+
+	case T_STORE:
+	    ws_store();
+	    break;
+
+	case T_FETCH:
+	    ws_fetch();
+	    break;
+
+	default:
+	    fprintf(stderr, "%s unimplemented\n", tokennames[n->type]); exit(1);
+	    break;
+	}
+
+	n=n->next;
+    }
+}

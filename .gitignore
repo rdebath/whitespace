@@ -12,3 +12,6 @@
 !*.c
 !*.h
 !*.sed
+
+# But this is generated source.
+ws_engine_txt.h
