@@ -94,6 +94,9 @@ static void ws_pushs(char * s)
     }
 }
 
+#ifdef ATOMISE_LABELS
+/* These only work properly if they can allocate a unique atom */
+
 /* Jump if positive */
 static void ws_jp_int(int v) {
     int t = atom("");
@@ -138,6 +141,8 @@ static void ws_jnz_int(int v) {
     ws_jump_int(v);
     ws_label_int(t);
 }
+
+#endif
 
 static void
 putnum(unsigned long num, int clipped)
