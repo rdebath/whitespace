@@ -4,6 +4,8 @@ EXE=wsc ws2c wsa blockquote
 
 all: $(EXE)
 
+ws2c: ws2c.o
+
 ws2c.o: ws2c.c ws_engine.h ws_engine_txt.h
 
 ws_engine_txt.h: blockquote ws_engine.h
