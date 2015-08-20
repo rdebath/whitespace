@@ -1,6 +1,6 @@
 
 # Ignore everything
-*
+/*
 # Except the source.
 !.gitignore
 !Makefile
@@ -12,6 +12,6 @@
 !*.c
 !*.h
 !*.sed
-
+!/tests
 # But this is generated source.
 ws_engine_txt.h
