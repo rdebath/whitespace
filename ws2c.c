@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <ctype.h>
 
 # ifndef NO_INTTYPES
 #  include <inttypes.h>
@@ -16,22 +18,88 @@
 #  define SCNdcell              "ld"
 # endif
 
+#define STFU(expression)	(expression)	/* Make GCC ... */
+
+#define TOKEN_LIST(Mac) \
+    Mac(PUSH) \
+    Mac(DUP) Mac(DROP) Mac(SWAP) \
+    Mac(PICK) Mac(SLIDE) \
+    Mac(LABEL) Mac(JUMP) Mac(CALL) \
+    Mac(EXIT) \
+    Mac(JZ) Mac(JN) \
+    Mac(RETURN) \
+    Mac(ADD) Mac(MUL) Mac(SUB) Mac(DIV) Mac(MOD) \
+    Mac(OUTC) Mac(OUTN) Mac(READC) Mac(READN) \
+    Mac(STORE) Mac(FETCH) \
+    \
+    Mac(NOP)
+
+#define GEN_TOK_ENUM(NAME) T_ ## NAME,
+enum token { TOKEN_LIST(GEN_TOK_ENUM) TCOUNT };
+
+#define GEN_TOK_STRING(NAME) "T_" #NAME,
+const char *tokennames[] = { TOKEN_LIST(GEN_TOK_STRING) };
+
+char *cmdnames[TCOUNT];
+
+struct pnode;
+
+struct labelnode {
+    struct labelnode *next;
+    struct pnode *location;
+    struct pnode *reflist;
+    char *name;
+};
+
+struct pnode {
+    struct pnode *next;
+    struct pnode *prev;
+    int type;
+    cell_t value;
+    int inum;
+
+    struct labelnode *plabel;
+    struct pnode *jmp;
+    struct pnode *next_reflist;
+};
+
 cell_t cv_number(char *);
-char * cv_label(char *);
-char * cv_chr(char *);
+char *cv_label(char *);
+char *cv_chr(char *);
 
 void append_label(void);
 void append_char(void);
 void process_command(void);
 void broken_command(void);
+void init_cmdnames(void);
 
-FILE * yyin;
+void process_token_v(int);
+void process_token_i(int, cell_t);
+void process_token_l(int, char *);
+void process_tree(void);
+void *tcalloc(size_t nmemb, size_t size);
+struct pnode *add_node_after(struct pnode *p);
+struct labelnode *find_label(char *label);
+void dump_tree(void);
 
-char * yytext;
+struct pnode *wsprog = 0, *wsprogend;
+struct labelnode *labellist = 0;
+int inum = 0;
+
+FILE *yyin;
+
+char *yytext;
 int yytext_size = 0, yytext_len;
 
-char * yylabel;
+char *yylabel;
 int yylabel_size = 0, yylabel_len;
+
+char *header;
+
+int opt_v0_2 = 0;
+int interpret_now = 0;
+int on_eof = -1;
+int debug = 0;
 
 /* TODO:
     Add fallbacks for labels that are not defined.
@@ -39,26 +107,47 @@ int yylabel_size = 0, yylabel_len;
     Header for GMP.
     Built in interpreter.
  */
-char * header;
-
-int opt_v2 = 0;
-
-int main(int argc, char ** argv)
+int
+main(int argc, char ** argv)
 {
-    printf("%s\n\n", header);
+    int headerflg = 0;
+    int enable_opts = 1;
+    int done_file = 0;
+
+    init_cmdnames();
+
     if (argc <= 1) yyin = stdin;
 
     do
     {
+	if(argc>1 && argv[1][0] == '-' && enable_opts) {
+	    if (!strcmp(argv[1], "--")) enable_opts = 1;
+	    else if (!done_file && !strcmp(argv[1], "-r")) interpret_now = 1;
+	    else if (!strcmp(argv[1], "-e")) on_eof = -1;
+	    else if (!strcmp(argv[1], "-z")) on_eof = 0;
+	    else if (!strcmp(argv[1], "-n")) on_eof = 1;
+	    else if (!strcmp(argv[1], "-d")) debug = 1;
+	    else if (!strcmp(argv[1], "-old")) opt_v0_2 = 1;
+
+	    else {
+		fprintf(stderr, "Unknown option %s\n", argv[1]);
+	    }
+	    argv++, argc--;
+	    continue;
+	}
+
 	if(argc>1) {
 	    if (!(yyin = fopen(argv[1], "r"))) {
 		perror(argv[1]);
 		exit(1);
 	    }
+	    done_file = 1;
 	}
 
-	while (!feof(yyin) && !ferror(yyin))
+	while (!feof(yyin) && !ferror(yyin)) {
+	    if (!headerflg && !interpret_now) { printf("%s\n\n", header); headerflg = 1; };
 	    process_command();
+	}
 
 	if (ferror(yyin))
 	    fprintf(stderr, "Error reading from file (ferror(3) so no reason given).\n");
@@ -67,9 +156,16 @@ int main(int argc, char ** argv)
 	    fclose(yyin);
 	    argv++, argc--;
 	}
-    } while(argc>1);
+    } while(!done_file || argc>1);
 
-    printf("\nws_trailer\n");
+    if (headerflg) printf("\nws_trailer\n");
+
+    if (interpret_now) {
+	setbuf(stdout, 0);
+	process_tree();
+
+	dump_tree();
+    }
     return 0;
 }
 
@@ -89,7 +185,7 @@ process_command()
 	return;
     }
 
-    if (yylabel_len != 0)
+    if (yylabel_len != 0 && !interpret_now)
 	printf("/* %s*/\n", yylabel);
     yylabel_len = 0;
 
@@ -97,22 +193,22 @@ process_command()
 	if (yytext[1] == ' ') {
 	    if (yytext[2] != '\n') {
 		append_label();
-		printf("ws_push(%"PRIdcell");", cv_number(yytext+2));
+		process_token_i(T_PUSH, cv_number(yytext+2));
 	    } else
 		broken_command();
 	}
 	if (yytext[1] == '\n') {
-	    if (yytext[2] == ' ') printf("ws_dup();");
-	    if (yytext[2] == '\n') printf("ws_drop();");
-	    if (yytext[2] == '\t') printf("ws_swap();");
+	    if (yytext[2] == ' ') process_token_v(T_DUP);
+	    if (yytext[2] == '\n') process_token_v(T_DROP);
+	    if (yytext[2] == '\t') process_token_v(T_SWAP);
 	}
 	if (yytext[1] == '\t') {
-	    if (opt_v2)
+	    if (opt_v0_2)
 		broken_command();
 	    else if (yytext[2] != '\t') {
 		append_label();
-		if (yytext[2] == ' ') printf("ws_pick(%"PRIdcell");", cv_number(yytext+3));
-		if (yytext[2] == '\n') printf("ws_slide(%"PRIdcell");", cv_number(yytext+3));
+		if (yytext[2] == ' ') process_token_i(T_PICK, cv_number(yytext+3));
+		if (yytext[2] == '\n') process_token_i(T_SLIDE, cv_number(yytext+3));
 	    } else
 		broken_command();
 	}
@@ -121,23 +217,23 @@ process_command()
     if (yytext[0] == '\n') {
 	if (yytext[1] == ' ') {
 	    append_label();
-	    if (yytext[2] == ' ') printf("ws_label(%s);", cv_label(yytext+3));
-	    if (yytext[2] == '\n') printf("ws_jump(%s);", cv_label(yytext+3));
-	    if (yytext[2] == '\t') printf("ws_call(%s);", cv_label(yytext+3));
+	    if (yytext[2] == ' ') process_token_l(T_LABEL, cv_label(yytext+3));
+	    if (yytext[2] == '\n') process_token_l(T_JUMP, cv_label(yytext+3));
+	    if (yytext[2] == '\t') process_token_l(T_CALL, cv_label(yytext+3));
 	}
 	if (yytext[1] == '\n') {
 	    if (yytext[2] == '\n')
-		printf("ws_exit();");
+		process_token_v(T_EXIT);
 	    else
 		broken_command();
 	}
 	if (yytext[1] == '\t') {
 	    if (yytext[2] != '\n') {
 		append_label();
-		if (yytext[2] == ' ') printf("ws_jz(%s);", cv_label(yytext+3));
-		if (yytext[2] == '\t') printf("ws_jn(%s);", cv_label(yytext+3));
+		if (yytext[2] == ' ') process_token_l(T_JZ, cv_label(yytext+3));
+		if (yytext[2] == '\t') process_token_l(T_JN, cv_label(yytext+3));
 	    } else
-		printf("ws_return();");
+		process_token_v(T_RETURN);
 	}
     }
 
@@ -148,14 +244,14 @@ process_command()
 	    else {
 		append_char();
 		if (yytext[2] == ' ') {
-		    if (yytext[3] == ' ') printf("ws_add();");
-		    if (yytext[3] == '\n') printf("ws_mul();");
-		    if (yytext[3] == '\t') printf("ws_sub();");
+		    if (yytext[3] == ' ') process_token_v(T_ADD);
+		    if (yytext[3] == '\n') process_token_v(T_MUL);
+		    if (yytext[3] == '\t') process_token_v(T_SUB);
 		}
 		if (yytext[2] == '\t') {
-		    if (yytext[3] == ' ') printf("ws_div();");
+		    if (yytext[3] == ' ') process_token_v(T_DIV);
 		    if (yytext[3] == '\n') broken_command();
-		    if (yytext[3] == '\t') printf("ws_mod();");
+		    if (yytext[3] == '\t') process_token_v(T_MOD);
 		}
 	    }
 	}
@@ -165,39 +261,41 @@ process_command()
 	    else {
 		append_char();
 		if (yytext[2] == ' ') {
-		    if (yytext[3] == ' ') printf("ws_outc();");
+		    if (yytext[3] == ' ') process_token_v(T_OUTC);
 		    if (yytext[3] == '\n') broken_command();
-		    if (yytext[3] == '\t') printf("ws_outn();");
+		    if (yytext[3] == '\t') process_token_v(T_OUTN);
 		}
 		if (yytext[2] == '\t') {
-		    if (yytext[3] == ' ') printf("ws_readc();");
+		    if (yytext[3] == ' ') process_token_v(T_READC);
 		    if (yytext[3] == '\n') broken_command();
-		    if (yytext[3] == '\t') printf("ws_readn();");
+		    if (yytext[3] == '\t') process_token_v(T_READN);
 		}
 	    }
 	}
 	if (yytext[1] == '\t') {
-	    if (yytext[2] == ' ') printf("ws_store();");
+	    if (yytext[2] == ' ') process_token_v(T_STORE);
 	    if (yytext[2] == '\n') broken_command();
-	    if (yytext[2] == '\t') printf("ws_fetch();");
+	    if (yytext[2] == '\t') process_token_v(T_FETCH);
 	}
     }
-
-    printf("\t/* %s */\n", cv_chr(yytext));
-}
-
-void broken_command()
-{
-    char * s = cv_chr(yytext);
-    fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
-    printf("// if (ws_%s) ws_%s();", s, s);
 }
 
 void
-append_char() {
+broken_command()
+{
+    char *s = cv_chr(yytext);
+    fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
+    if (!interpret_now) {
+	printf("if (ws_%s) ws_%s();", s, s);
+	printf("\t/* %s */\n", cv_chr(yytext));
+    }
+}
+
+void
+append_char()
+{
     int ch;
-    for(;;)
-    {
+    for(;;) {
 	ch = getc(yyin);
 	if (ch == '\n' || ch == '\t' || ch == ' ' || ch == EOF) break;
 
@@ -349,6 +447,219 @@ char * cv_chr(char * ws_code)
     }
     sbuf[i] = 0;
     return sbuf;
+}
+
+void
+init_cmdnames()
+{
+    /* No easy way to do this with the preprocessor */
+    int i, j;
+    for(i=0; i<TCOUNT; i++) {
+	char * s = malloc(strlen(tokennames[i]));
+	strcpy(s, "ws_");
+	for(j=0; STFU(s[j] = tokennames[i][j+2]); j++)
+	    s[j] = tolower(s[j]);
+	cmdnames[i] = s;
+    }
+}
+
+void
+process_token_v(int token)
+{
+    if (!interpret_now) {
+	printf("ws_%s();", cmdnames[token]);
+	printf("\t/* %d: %s */\n", ++inum, cv_chr(yytext));
+	return;
+    } else {
+	struct pnode * n = add_node_after(wsprogend);
+	n->type = token;
+	n->inum = ++inum;
+    }
+}
+
+void
+process_token_i(int token, cell_t value)
+{
+    if (!interpret_now) {
+	printf("ws_%s(%"PRIdcell");", cmdnames[token], value);
+	printf("\t/* %d: %s */\n", ++inum, cv_chr(yytext));
+	return;
+    } else {
+	struct pnode * n = add_node_after(wsprogend);
+	n->type = token;
+	n->value = value;
+	n->inum = ++inum;
+    }
+}
+
+void
+process_token_l(int token, char * label)
+{
+    if (!interpret_now) {
+	printf("ws_%s(%s);", cmdnames[token], label);
+	printf("\t/* %d: %s */\n", ++inum, cv_chr(yytext));
+	return;
+    } else {
+	struct pnode * n = add_node_after(wsprogend);
+	n->type = token;
+	n->plabel = find_label(label);
+	n->inum = ++inum;
+	if (token == T_LABEL) {
+	    if (n->plabel->location) {
+		fprintf(stderr, "WARNING: Label '%s' redefined, using first instance\n", label);
+	    } else
+		n->plabel->location = n;
+	} else
+	    n->jmp = n->plabel->location;
+
+	n->next_reflist = n->plabel->reflist;
+	n->plabel->reflist = n;
+    }
+}
+
+void *
+tcalloc(size_t nmemb, size_t size)
+{
+    void * m;
+    m = calloc(nmemb, size);
+    if (m) return m;
+
+#if !defined(LEGACYOS) && !defined(_WIN32) && __STDC_VERSION__ >= 199901L
+    fprintf(stderr, "Allocate of %zu*%zu bytes failed, ABORT\n", nmemb, size);
+#else
+    fprintf(stderr, "Allocate of %lu*%lu bytes failed, ABORT\n",
+	    (unsigned long)nmemb, (unsigned long)size);
+#endif
+    exit(42);
+}
+
+struct pnode *
+add_node_after(struct pnode * p)
+{
+    struct pnode * n = tcalloc(1, sizeof*n);
+    n->type = T_NOP;
+    if (p) {
+	n->prev = p;
+	n->next = p->next;
+	if (n->next) n->next->prev = n;
+	n->prev->next = n;
+    } else if (wsprog) {
+	n->next = wsprog;
+	if (n->next) n->next->prev = n;
+    } else wsprog = n;
+
+    if (p == wsprogend) wsprogend = n;
+    return n;
+}
+
+struct labelnode *
+find_label(char *label)
+{
+    /*
+     * BEWARE: Linear search: TODO: replace!!
+     */
+    struct labelnode *n, *p;
+    for(p = 0, n = labellist; n; p = n, n = n->next) {
+	if (strcmp(n->name, label) == 0)
+	    return n;
+    }
+
+    n = tcalloc(1, sizeof *n);
+    n->name = strdup(label);
+    if (p)
+	p->next = n;
+    else
+	labellist = n;
+
+    return n;
+}
+
+void
+process_tree()
+{
+    struct pnode *n;
+    struct labelnode * l;
+
+    /* Falling off the end is a *really* bad idea */
+    if (!wsprogend || wsprogend->type != T_EXIT) {
+	n = add_node_after(wsprogend);
+	n->type = T_EXIT;
+	n->inum = ++inum;
+    }
+
+    /* Point all the labels at the instruction after the label command */
+    for(l = labellist; l; l=l->next)
+    {
+	if (l->location == 0) {
+	    fprintf(stderr, "WARNING: Label '%s' not defined, mapping to exit()\n", l->name);
+	    l->location = wsprogend;
+	}
+	while (l->location->type == T_LABEL)
+	    l->location = l->location->next;
+
+	for(n = l->reflist; n; n=n->next_reflist) {
+	    n->jmp = l->location;
+	}
+    }
+
+    /* Snip out all the label commands and clear the label pointers. */
+    for(n = wsprog; n; n=n->next) {
+	if (n->type == T_LABEL) {
+	    struct pnode *p = n->prev;
+	    if (p) p->next = n->next; else wsprog = n->next;
+	    if (n->next) n->next->prev = n->prev; else wsprogend = n->prev;
+	    free(n);
+	    n = p;
+	    if (!n) n = wsprog;
+	}
+	n->plabel = 0;
+    }
+
+    /* Set the label pointers for instructions that are pointed at by labels. */
+    for(l = labellist; l; l=l->next)
+    {
+	l->location->plabel = l;
+    }
+}
+
+void
+dump_tree()
+{
+    struct pnode *n, *p;
+
+    for(n = wsprog; n; n=n->next) {
+	if (n->plabel) {
+	    printf("L_%s: ", n->plabel->name);
+	}
+
+	printf("ws_%s", cmdnames[n->type]);
+	if (n->type == T_PUSH || n->type == T_PICK || n->type == T_SLIDE)
+	    printf("(%"PRIdcell");", n->value);
+	else if (n->jmp)
+	    printf("(%s);", n->jmp->plabel->name);
+	else
+	    printf("();");
+
+	printf("\t/*%4d", n->inum);
+
+	if (n->jmp)
+	    printf(" --> %d", n->jmp->inum);
+
+	if (n->plabel) {
+	    int c = ' ';
+	    printf(" <--");
+	    for(p = n->plabel->reflist; p; p=p->next_reflist) {
+		if (p->type != T_LABEL) {
+		    printf("%c%d", c, p->inum);
+		    c = ',';
+		}
+	    }
+	    if (c == ' ') printf(" UNUSED");
+	}
+
+	printf(" */");
+	printf("\n");
+    }
 }
 
 char * header =
@@ -562,7 +873,7 @@ char * header =
 "\n"
 "\n"	"    while(1) {"
 "\n"	"\tswitch(rpop()) {"
-"\n"	"\tcase -1:"
+"\n"	"\tcase -1:;"
 "\n"
 "\n"	"#define ws_trailer } ws_exit(); } }"
 
