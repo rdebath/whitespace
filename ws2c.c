@@ -16,9 +16,28 @@
 #  define INTcell_C(mpm)        mpm ## L
 #  define PRIdcell              "ld"
 #  define SCNdcell              "ld"
+#  define uint32_t		unsigned /* I guess */
 # endif
 
 #define STFU(expression)	(expression)	/* Make GCC ... */
+
+/* FNV Hash Constants from http://isthe.com/chongo/tech/comp/fnv/ */
+#define HASH_FNV_INITIAL 2166136261U
+#define HASH_FNV_MIXVAL 16777619U
+
+/* For 64bit integers ...
+    #define HASH_FNV_INITIAL 14695981039346656037UL
+    #define HASH_FNV_MIXVAL  1099511628211UL
+*/
+
+#define HASH_MIX_FNV1A(hash, val) hash = (hash ^ (unsigned char)(val)) * HASH_FNV_MIXVAL
+
+typedef uint32_t        fnv_hash_t;
+
+/* Tune the bits if you wish. */
+#define HASH_BITS       10
+#define HASH_SIZE ((fnv_hash_t)1<<HASH_BITS)
+#define HASH_MASK (HASH_SIZE-1)
 
 #define TOKEN_LIST(Mac) \
     Mac(PUSH) \
@@ -45,10 +64,12 @@ char *cmdnames[TCOUNT];
 struct pnode;
 
 struct labelnode {
-    struct labelnode *next;
+    struct labelnode *hashnext;
+    struct labelnode *allnext;
+    fnv_hash_t hash;
     struct pnode *location;
     struct pnode *reflist;
-    char *name;
+    char name[0];
 };
 
 struct pnode {
@@ -88,7 +109,12 @@ void run_tree(void);
 void dump_tree(void);
 
 struct pnode *wsprog = 0, *wsprogend;
-struct labelnode *labellist = 0;
+struct labelnode *all_labels = 0;
+struct labelnode *labeltab[HASH_SIZE];
+#ifdef HASH_STATS
+static long hash_num_labels, hash_num_searchs, hash_num_checks;
+#endif
+
 int inum = 0;
 
 FILE *yyin;
@@ -173,6 +199,15 @@ main(int argc, char ** argv)
 
 	run_tree();
     }
+#ifdef HASH_STATS
+    if (hash_num_searchs) {
+	printf("Hash stats:\n");
+	printf("Number of searchs %ld\n", hash_num_searchs);
+	printf("Number of search checks %ld\n", hash_num_checks);
+	printf("Number of failed searchs %ld\n", hash_num_labels);
+	printf("Average search length %f\n", (double)hash_num_checks/hash_num_searchs);
+    }
+#endif
     return 0;
 }
 
@@ -579,24 +614,55 @@ add_node_after(struct pnode * p)
     return n;
 }
 
+static fnv_hash_t
+hash_string(const char *val)
+{
+    fnv_hash_t hash = HASH_FNV_INITIAL;
+    unsigned char c;
+
+    while ((c = (unsigned char)*val++))
+	HASH_MIX_FNV1A(hash, c);
+
+    /* Humm, I don't see the point of these two variations, they give
+     * identical results given the preconditions. */
+#if HASH_BITS < 16
+    hash = (((hash>>HASH_BITS) ^ hash) & HASH_MASK);
+#else
+    hash = (hash>>HASH_BITS) ^ (hash & HASH_MASK);
+#endif
+    return hash;
+}
+
 struct labelnode *
 find_label(char *label)
 {
-    /*
-     * BEWARE: Linear search: TODO: replace!!
-     */
+    fnv_hash_t hash = hash_string(label);
     struct labelnode *n, *p;
-    for(p = 0, n = labellist; n; p = n, n = n->next) {
-	if (strcmp(n->name, label) == 0)
+
+#ifdef HASH_STATS
+    hash_num_searchs++;
+#endif
+    for(p = 0, n = labeltab[hash]; n; p = n, n = n->hashnext) {
+#ifdef HASH_STATS
+	hash_num_checks++;
+#endif
+	if (n->hash == hash && strcmp(n->name, label) == 0)
 	    return n;
     }
 
-    n = tcalloc(1, sizeof *n);
-    n->name = strdup(label);
+#ifdef HASH_STATS
+    hash_num_labels++;
+#endif
+    n = tcalloc(1, sizeof *n + strlen(label) + 1);
+    strcpy(n->name, label);
+    n->hash = hash;
     if (p)
-	p->next = n;
+	p->hashnext = n;
     else
-	labellist = n;
+	labeltab[hash] = n;
+
+    if (all_labels) n->allnext = all_labels;
+    all_labels = n;
 
     return n;
 }
@@ -615,7 +681,7 @@ process_tree()
     }
 
     /* Point all the labels at the instruction after the label command */
-    for(l = labellist; l; l=l->next)
+    for(l = all_labels; l; l=l->allnext)
     {
 	if (l->location == 0) {
 	    fprintf(stderr, "WARNING: Label '%s' not defined, mapping to exit()\n", l->name);
@@ -643,7 +709,7 @@ process_tree()
     }
 
     /* Set the label pointers for instructions that are pointed at by labels. */
-    for(l = labellist; l; l=l->next)
+    for(l = all_labels; l; l=l->allnext)
     {
 	l->location->plabel = l;
     }
