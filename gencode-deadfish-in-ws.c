@@ -1,13 +1,13 @@
 
 #include "ws_gencode.h"
 
-int main(void)
-{
+    ws_header();
+
     ws_comment( "http://esolangs.org/wiki/Deadfish#Whitespace"
     "\n"	"by Robert de Bath (2015)");
 
     ws_push(0);	// x
-    ws_label(1);
+ws_label(1);
 
     ws_push(62);
     ws_dup();
@@ -25,7 +25,7 @@ int main(void)
     ws_push(-1);
     ws_sub();
     ws_jz(2);
-    ws_label(3);
+ws_label(3);
 
     ws_push(0);
     ws_readc();
@@ -57,30 +57,30 @@ int main(void)
     ws_outc();
     ws_jump(1);
 
-    ws_label(2);
+ws_label(2);
     ws_drop();
     ws_push(0);
     ws_jump(3);
 
-    ws_label(5);	// i
+ws_label(5);	// i
     ws_drop();
     ws_push(1);
     ws_add();
     ws_jump(1);
 
-    ws_label(6);	// d
+ws_label(6);	// d
     ws_drop();
     ws_push(-1);
     ws_add();
     ws_jump(1);
 
-    ws_label(7);	// 2
+ws_label(7);	// 2
     ws_drop();
     ws_dup();
     ws_mul();
     ws_jump(1);
 
-    ws_label(4);	// o
+ws_label(4);	// o
     ws_drop();
     ws_dup();
     ws_outn();
@@ -90,5 +90,4 @@ int main(void)
 
     ws_exit();
 
-    return 0;
-}
+    ws_trailer

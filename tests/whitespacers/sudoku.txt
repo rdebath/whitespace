@@ -1,0 +1,23 @@
+WARNING
+
+This program and input takes a very long time to run on the original
+Haskell implementation.
+
+On my machine it was this long ... 
+
+real    204m19.687s
+user    204m7.976s
+sys     0m4.932s
+
+My conversion to C is a lot quicker ...
+
+real    0m3.295s
+user    0m3.260s
+sys     0m0.000s
+
+and even running it in the interpreter is pretty good.
+
+real    0m6.371s
+user    0m6.364s
+sys     0m0.000s
+

@@ -1,47 +1,66 @@
-lll		quit		End
-
-lsl	L	jmp		Jump
-lss	L	label		Label
-lst	L	call		Call
-
-ltl		ret		Return
-lts	L	jz		If-Zero
-ltt	L	jn		If-Negative
-
-sll		drop		Discard
-sls		dup		Dup
-slt		swap		Swap
+The number of permutations of three characters is 27, we have 24 instructions
+so there should be no need for more than three. However, we are tending to
+avoid linefeeds and we want to use the 'ss' short code.
 
 ss	N	push		Push
 
-// These two added later -- V0.3
-// Pick (Copy/Ref) is just like Forth; "Slide" is a limited substitute for ROT.
-// The "N" must be positive so only valid forms are "stls" and "stss"
-stl	N	leave		Slide
-sts	N	pick		Ref		0 pick == dup, like forth
+sts	N	N-pick		Ref ***		0 pick == dup, like forth
+stl	N	leave		Slide ***
+
+sls		dup		Dup		as forth
+slt		swap		Swap		as forth
+sll		drop		Discard		as forth
+
+tsss		add		Plus		as forth
+tsst		sub		Minus		as forth
+tssl		mul		Times		as forth
+
+tsts		div		Divide		as forth
+tstt		mod		Modulo		as forth
+
+tts		store		Store		swaped relative to forth
+ttt		fetch		Retrieve	as forth
 
 tlss		outc		OutputChar	as forth emit
 tlst		outn		OutputNum
+
 tlts		readc		ReadChar	reads into memory like forth "expect" but only one char at a time.
 tltt		readn		ReadNum
 
-tssl		mul		Times		order as forth
-tsss		add		Plus		order as forth
-tsst		sub		Minus		order as forth
-tsts		div		Divide		order as forth
-tstt		mod		Modulo		order as forth
+lss	L	label		Label
+lst	L	call		Call
+lsl	L	jmp		Jump
 
-tts		store		Store		swaped relative to forth
-ttt		fetch		Retrieve
+lts	L	jz		If-Zero
+ltt	L	jn		If-Negative
+ltl		ret		Return
+
+lll		quit		End
+
+// *** These two added later -- V0.3
+//     "N-pick (Copy/Ref) is just like Forth (excpet it uses a constant);
+//     "N-slide" is a limited substitute for ROT.
+//     The "N" must be positive so only valid forms are "stls" and "stss"
+
+// some suggestions...
+// stts		pick
+// sttt		roll
+// sttl		depth
+// These codes make the language Turing complete without "fetch" and "store".
+//
+// ssl		(N -- R) 'R' is a random value between 0 and N-1 inclusive
+// ssl		(N 0 -- ) Init the pseudo random number generator with N
+//                        Zero means an unknown external source which MAY be
+//                        just a clock.
 
 // Unused prefixes. (ssl may be a zero)
-lls
-llt
 ssl
 stt
-tll
+tstl
+tsl
+ttl
 tlsl
 tltl
-tsl
-tstl
-ttl
+tll
+lls
+llt

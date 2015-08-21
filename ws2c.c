@@ -149,7 +149,10 @@ main(int argc, char ** argv)
 	}
 
 	while (!feof(yyin) && !ferror(yyin)) {
-	    if (!headerflg && !interpret_now) { printf("%s\n\n", header); headerflg = 1; };
+	    if (!headerflg && !interpret_now) {
+		printf("%s\n\nws_header();\n\n", header);
+		headerflg = 1;
+	    };
 	    process_command();
 	}
 
@@ -351,15 +354,17 @@ append_label()
 cell_t
 cv_number(char * ws_num)
 {
-    int negative = (*ws_num++ != ' ');
+    int negative = 0;
     cell_t value = 0;
+
+    if (*ws_num) negative = (*ws_num++ != ' ');
 
     if (strlen(ws_num) > sizeof(cell_t) * 8)
 	fprintf(stderr, "WARNING: Literal constant too large: '%s'\n", cv_chr(ws_num));
     if (*ws_num == '\n')
 	fprintf(stderr, "WARNING: Literal constant is empty: '%s'\n", cv_chr(ws_num));
 
-    while(*ws_num != '\n') {
+    while(*ws_num != '\n' && *ws_num) {
 	value *= 2;
 	if (*ws_num != ' ')
 	    value++;

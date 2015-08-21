@@ -243,3 +243,8 @@ ws_comment(char * msg)
     while(nl-->1) ws_add();
     ws_drop();
 }
+
+#define ws_header()	int main() {
+#define ws_trailer	return 0;}
+
+/****************************************************************************/

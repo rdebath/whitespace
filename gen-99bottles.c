@@ -1,7 +1,7 @@
 
 #include "ws_gencode.h"
 
-int main() {
+ws_header();
 
 ws_comment( "Whitespace version of 99 bottles of beer (Bottles.ws) 2003-04-01"
 "\n"	    "See http://compsoc.dur.ac.uk/whitespace/ for details interpreter"
@@ -263,4 +263,4 @@ ws_push(115);	/* ssstttssttl */
 ws_outc();	/* tlss */
 ws_return();	/* ltl */
 
-}
+ws_trailer

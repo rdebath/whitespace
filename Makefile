@@ -16,4 +16,5 @@ ws_engine_txt.h: blockquote ws_engine.h
 clean:
 	-rm -f $(EXE)
 	-rm -f ws_engine_txt.h
+	-rm -f ws2c.o
 

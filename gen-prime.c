@@ -4,8 +4,8 @@
 
 #include "ws_gencode.h"
 
-int main()
-{
+ws_header();
+
 // get prim numbers
 
 ws_pushs("prim numbers [2-100]");
@@ -142,5 +142,4 @@ ws_push(10);
 ws_outc();
 ws_return();
 
-
-}
+ws_trailer

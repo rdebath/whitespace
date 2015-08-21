@@ -221,16 +221,19 @@ static GCC_UNUSED void ws_trace(int val) {
 }
 #endif
 
-#ifndef EMBEDDED_WS
-int
-main(void)
-{
-    setbuf(stdout, 0);
-    rpush(-1);
+#define ws_comment(x)
 
-    while(1) {
-	switch(rpop()) {
-	case -1:;
+#define ws_header()		\
+int				\
+main(void)			\
+{				\
+    setbuf(stdout, 0);		\
+    rpush(-1);			\
+				\
+    while(1) {			\
+	switch(rpop()) {	\
+	case -1:
 
 #define ws_trailer } ws_exit(); } }
-#endif
+
+/****************************************************************************/

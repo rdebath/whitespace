@@ -1,12 +1,14 @@
 #define ATOMISE_LABELS
 #include "ws_gencode.h"
-int main() {
+
 /*
 options
 
 print_trace      print each instruction when it is run
 
 */
+
+ws_header();
 
 ws_call(main);
 ws_exit();
@@ -2686,5 +2688,4 @@ ws_sub();
 
 ws_jn(read_start_noreset);
 
-
-}
+ws_trailer
