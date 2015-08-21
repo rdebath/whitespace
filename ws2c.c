@@ -84,6 +84,8 @@ struct pnode {
     struct pnode *next_reflist;
 };
 
+int enable_warnings = 1;
+
 #define EMBEDDED_WS
 #include "ws_engine.h"
 #include "ws_engine_txt.h"
@@ -143,7 +145,7 @@ main(int argc, char ** argv)
 
     init_cmdnames();
 
-    if (argc <= 1) yyin = stdin;
+    yyin = stdin;
 
     do
     {
@@ -152,6 +154,7 @@ main(int argc, char ** argv)
 	    else if (!done_file && !strcmp(argv[1], "-r")) interpret_now = 1;
 	    else if (!done_file && !strcmp(argv[1], "-c")) interpret_now = 0;
 	    else if (!strcmp(argv[1], "-v")) comment_lines++;
+	    else if (!strcmp(argv[1], "-q")) enable_warnings=0;
 
 	    else if (!strcmp(argv[1], "-e")) on_eof = -1;
 	    else if (!strcmp(argv[1], "-z")) on_eof = 0;
@@ -221,7 +224,7 @@ process_command()
     append_char();
     append_char();
 
-    if (feof(yyin)) {
+    if (feof(yyin) && enable_warnings) {
 	fprintf(stderr, "WARNING: Partial instruction at end of file: '%s'\n",
 		 cv_chr(yytext));
 	return;
@@ -332,7 +335,8 @@ void
 broken_command()
 {
     char *s = cv_chr(yytext);
-    fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
+    if (enable_warnings)
+	fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
     if (!interpret_now) {
 	printf("if (ws_%s) ws_%s();", s, s);
 	printf("\t/* %s */\n", cv_chr(yytext));
@@ -381,7 +385,7 @@ append_label()
     do {
 	append_char();
     } while(yytext[yytext_len-1] != '\n' && !feof(yyin));
-    if (feof(yyin))
+    if (feof(yyin) && enable_warnings)
 	fprintf(stderr, "WARNING: Partial instruction at end of file: '%s'\n",
 		 cv_chr(yytext));
 }
@@ -394,10 +398,12 @@ cv_number(char * ws_num)
 
     if (*ws_num) negative = (*ws_num++ != ' ');
 
-    if (strlen(ws_num) > sizeof(cell_t) * 8)
-	fprintf(stderr, "WARNING: Literal constant too large: '%s'\n", cv_chr(ws_num));
-    if (*ws_num == '\n')
-	fprintf(stderr, "WARNING: Literal constant is empty: '%s'\n", cv_chr(ws_num));
+    if (enable_warnings) {
+	if (strlen(ws_num) > sizeof(cell_t) * 8)
+	    fprintf(stderr, "WARNING: Literal constant too large: '%s'\n", cv_chr(ws_num));
+	if (*ws_num == '\n')
+	    fprintf(stderr, "WARNING: Literal constant is empty: '%s'\n", cv_chr(ws_num));
+    }
 
     while(*ws_num != '\n' && *ws_num) {
 	value *= 2;
@@ -568,7 +574,8 @@ process_token_l(int token, char * label)
 	n->inum = ++inum;
 	if (token == T_LABEL) {
 	    if (n->plabel->location) {
-		fprintf(stderr, "WARNING: Label '%s' redefined, using first instance\n", label);
+		if (enable_warnings)
+		    fprintf(stderr, "WARNING: Label '%s' redefined, using first instance\n", label);
 	    } else
 		n->plabel->location = n;
 	} else
@@ -684,7 +691,8 @@ process_tree()
     for(l = all_labels; l; l=l->allnext)
     {
 	if (l->location == 0) {
-	    fprintf(stderr, "WARNING: Label '%s' not defined, mapping to exit()\n", l->name);
+	    if (enable_warnings)
+		fprintf(stderr, "WARNING: Label '%s' not defined, mapping to exit()\n", l->name);
 	    l->location = wsprogend;
 	}
 	while (l->location->type == T_LABEL)

@@ -55,6 +55,9 @@ int memlen = 0;
 static void check_memory(cell_t mptr) {
 static int mccount = 5;
     if (mptr >= 0 && mptr < memlen) return;
+#ifdef EMBEDDED_WS
+    if (enable_warnings == 0) return;
+#endif
     if (mccount == 0) return;
 
     if (mptr < 0) {
