@@ -124,8 +124,8 @@ FILE *yyin;
 char *yytext;
 int yytext_size = 0, yytext_len;
 
-char *yylabel;
-int yylabel_size = 0, yylabel_len;
+char *comment;
+int comment_size = 0, comment_len;
 
 int opt_v0_2 = 0;
 int interpret_now = 1;
@@ -218,6 +218,7 @@ void
 process_command()
 {
     yytext_len = 0;
+    comment_len = 0;
     append_char();
     if (yytext_len == 0) return;
 
@@ -229,16 +230,6 @@ process_command()
 		 cv_chr(yytext));
 	return;
     }
-
-    if (yylabel_len != 0) {
-	if (!interpret_now)
-	    printf("/* %s*/\n", yylabel);
-	else if (comment_lines > 0) {
-	    comment_lines--;
-	    printf("> %s\n", yylabel);
-	}
-    }
-    yylabel_len = 0;
 
     if (yytext[0] == ' ') {
 	if (yytext[1] == ' ') {
@@ -332,18 +323,6 @@ process_command()
 }
 
 void
-broken_command()
-{
-    char *s = cv_chr(yytext);
-    if (enable_warnings)
-	fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
-    if (!interpret_now) {
-	printf("if (ws_%s) ws_%s();", s, s);
-	printf("\t/* %s */\n", cv_chr(yytext));
-    }
-}
-
-void
 append_char()
 {
     int ch;
@@ -352,16 +331,16 @@ append_char()
 	if (ch == '\n' || ch == '\t' || ch == ' ' || ch == EOF) break;
 
 	if ((ch > ' ' && ch <= '~') || ch >= 0x80 || ch < 0) {
-	    if (ch == '/' && yylabel_len != 0 && yylabel[yylabel_len-1] == '*')
+	    if (ch == '/' && comment_len != 0 && comment[comment_len-1] == '*')
 		ch = '\\'; /* Grrr */
 
-	    if (yylabel_len+4 >= yylabel_size) {
-		yylabel = realloc(yylabel, yylabel_size+=1024);
-		if (yylabel == 0) { perror("malloc"); exit(99); }
+	    if (comment_len+4 >= comment_size) {
+		comment = realloc(comment, comment_size+=1024);
+		if (comment == 0) { perror("malloc"); exit(99); }
 	    }
 
-	    yylabel[yylabel_len++] = ch;
-	    yylabel[yylabel_len] = 0;
+	    comment[comment_len++] = ch;
+	    comment[comment_len] = 0;
 	}
     }
     if (ch == EOF) return;
@@ -373,9 +352,9 @@ append_char()
     yytext[yytext_len++] = ch;
     yytext[yytext_len] = 0;
 
-    if (yylabel_len > 0 && yylabel[yylabel_len-1] != ' ') {
-	yylabel[yylabel_len++] = ' ';
-	yylabel[yylabel_len] = 0;
+    if (comment_len > 0 && comment[comment_len-1] != ' ') {
+	comment[comment_len++] = ' ';
+	comment[comment_len] = 0;
     }
 }
 
@@ -520,58 +499,81 @@ init_cmdnames()
 }
 
 void
+display_comment()
+{
+    if (comment_len != 0) {
+	if (!interpret_now)
+	    printf("\t\t/* %s*/\n", comment);
+	else if (comment_lines > 0) {
+	    comment_lines--;
+	    printf("> %s\n", comment);
+	}
+    }
+    comment_len = 0;
+
+    if (!interpret_now)
+	printf("\t\t/* %d: %s */\n", inum, cv_chr(yytext));
+
+#ifdef WS_TRACE
+    if (!interpret_now) {
+	if (token != T_LABEL) printf("ws_trace(%d);\n", inum);
+    }
+#endif
+}
+
+void
+broken_command()
+{
+    char *s = cv_chr(yytext);
+    display_comment();
+    if (enable_warnings)
+	fprintf(stderr, "WARNING: Skipped unknown sequence: '%s'\n", s);
+    if (!interpret_now) {
+	printf("if (ws_%s) ws_%s();\n", s, s);
+    }
+}
+
+void
 process_token_v(int token)
 {
+    inum ++;
+    display_comment();
     if (!interpret_now) {
-	inum ++;
-#ifdef WS_TRACE
-	printf("ws_trace(%d);\n", inum);
-#endif
-	printf("ws_%s();", cmdnames[token]);
-	printf("\t/* %d: %s */\n", inum, cv_chr(yytext));
-	return;
+	printf("ws_%s();\n", cmdnames[token]);
     } else {
 	struct pnode * n = add_node_after(wsprogend);
 	n->type = token;
-	n->inum = ++inum;
+	n->inum = inum;
     }
 }
 
 void
 process_token_i(int token, cell_t value)
 {
+    inum ++;
+    display_comment();
     if (!interpret_now) {
-	inum ++;
-#ifdef WS_TRACE
-	printf("ws_trace(%d);\n", inum);
-#endif
-	printf("ws_%s(%"PRIdcell");", cmdnames[token], value);
-	printf("\t/* %d: %s */\n", inum, cv_chr(yytext));
-	return;
+	printf("ws_%s(%"PRIdcell");\n", cmdnames[token], value);
     } else {
 	struct pnode * n = add_node_after(wsprogend);
 	n->type = token;
 	n->value = value;
-	n->inum = ++inum;
+	n->inum = inum;
     }
 }
 
 void
 process_token_l(int token, char * label)
 {
+    inum ++;
+    display_comment();
     if (!interpret_now) {
-	inum ++;
-#ifdef WS_TRACE
-	if (token != T_LABEL) printf("ws_trace(%d);\n", inum);
-#endif
-	printf("ws_%s(%s);", cmdnames[token], label);
-	printf("\t/* %d: %s */\n", inum, cv_chr(yytext));
-	return;
+	printf("ws_%s(%s);\n", cmdnames[token], label);
     } else {
 	struct pnode * n = add_node_after(wsprogend);
 	n->type = token;
 	n->plabel = find_label(label);
-	n->inum = ++inum;
+	n->inum = inum;
 	if (token == T_LABEL) {
 	    if (n->plabel->location) {
 		if (enable_warnings)
