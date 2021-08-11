@@ -38,7 +38,7 @@ ltl		ret		Return
 lll		quit		End
 
 // *** These two added later -- V0.3
-//     "N-pick (Copy/Ref) is just like Forth (excpet it uses a constant);
+//     "N-pick (Copy/Ref) is just like Forth (except it uses a constant);
 //     "N-slide" is a limited substitute for ROT.
 //     The "N" must be positive so only valid forms are "stls" and "stss"
 

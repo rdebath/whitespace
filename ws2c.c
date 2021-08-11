@@ -419,9 +419,9 @@ char * cv_label(char * ws_label)
 	    if (*s != ' ')
 		i ++;
 	    if (++j == 8) {
-		if (i>=48 && i<=57 && n != 0) {
+		if (i>='0' && i<='9' && n != 0) {
 		    sbuf[n++] = i;
-		} else if ( (i>=65 && i<=90) || (i>=97 && i<=122) || i==95) {
+		} else if ( (i>='A' && i<='Z') || (i>='a' && i<='z') || i=='_') {
 		    sbuf[n++] = i;
 		} else {
 		    n = 0;

@@ -1,7 +1,7 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 
 #ifndef BIJECTIVE
 #define BIJECTIVE 0
